@@ -1,0 +1,49 @@
+import { Button } from "@/components/ui/button";
+import { ArrowRight } from "lucide-react";
+import { stripHtml } from "@/lib/strapi";
+
+interface MenuItem {
+  label?: string;
+  url?: string;
+  targetBlank?: boolean;
+}
+
+interface SubscribeCtaSectionProps {
+  main_title?: string;
+  description?: string;
+  button?: MenuItem;
+}
+
+/** Centered heading, supporting text, and one action button on a tinted band. */
+const SubscribeCtaSection = ({ main_title, description, button }: SubscribeCtaSectionProps) => (
+  <section className="py-16 bg-surface-elevated border-t border-border">
+    <div className="container mx-auto px-4 lg:px-8 text-center">
+      <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight text-foreground">{main_title}</h2>
+      {description && <p className="mt-6 text-lg text-muted-foreground max-w-xl mx-auto">{stripHtml(description)}</p>}
+      {button?.label && (
+        <Button
+          asChild={Boolean(button.url)}
+          variant="hero"
+          size="lg"
+          className="mt-6 gap-2"
+        >
+          {button.url ? (
+            <a
+              href={button.url}
+              target={button.targetBlank ? "_blank" : undefined}
+              rel={button.targetBlank ? "noopener noreferrer" : undefined}
+            >
+              {button.label} <ArrowRight size={16} />
+            </a>
+          ) : (
+            <span>
+              {button.label} <ArrowRight size={16} />
+            </span>
+          )}
+        </Button>
+      )}
+    </div>
+  </section>
+);
+
+export default SubscribeCtaSection;
