@@ -20,14 +20,9 @@ const SubscribeCtaSection = ({ main_title, description, button }: SubscribeCtaSe
     <div className="container mx-auto px-4 lg:px-8 text-center">
       <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight text-foreground">{main_title}</h2>
       {description && <p className="mt-6 text-lg text-muted-foreground max-w-xl mx-auto">{stripHtml(description)}</p>}
-      {button?.label && (
-        <Button
-          asChild={Boolean(button.url)}
-          variant="hero"
-          size="lg"
-          className="mt-6 gap-2"
-        >
-          {button.url ? (
+      {button?.label &&
+        (button.url ? (
+          <Button asChild variant="hero" size="lg" className="mt-6 gap-2">
             <a
               href={button.url}
               target={button.targetBlank ? "_blank" : undefined}
@@ -35,13 +30,12 @@ const SubscribeCtaSection = ({ main_title, description, button }: SubscribeCtaSe
             >
               {button.label} <ArrowRight size={16} />
             </a>
-          ) : (
-            <span>
-              {button.label} <ArrowRight size={16} />
-            </span>
-          )}
-        </Button>
-      )}
+          </Button>
+        ) : (
+          <Button variant="hero" size="lg" className="mt-6 gap-2">
+            {button.label} <ArrowRight size={16} />
+          </Button>
+        ))}
     </div>
   </section>
 );

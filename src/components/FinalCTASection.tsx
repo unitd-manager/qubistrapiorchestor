@@ -46,16 +46,20 @@ const FinalCTASection = (props: FinalCTABlockProps = {}) => {
         </h2>
         <p className="mt-6 text-lg text-muted-foreground max-w-xl mx-auto">{subheading}</p>
         <div className="flex flex-wrap justify-center gap-4 mt-10">
-          <Button asChild variant="hero" size="lg" className="gap-2 px-8 h-12">
-            <a href={ctaUrl} target="_blank" rel="noopener noreferrer">
-              {primaryLabel} <ArrowRight size={18} />
-            </a>
-          </Button>
-          <Button asChild variant="hero-outline" size="lg" className="gap-2 px-8 h-12">
-            <a href={secondaryUrl} target="_blank" rel="noopener noreferrer">
-              <MessageSquare size={16} /> {secondaryLabel}
-            </a>
-          </Button>
+          {primaryLabel && (
+            <Button asChild variant="hero" size="lg" className="gap-2 px-8 h-12">
+              <a href={ctaUrl} target="_blank" rel="noopener noreferrer">
+                {primaryLabel} <ArrowRight size={18} />
+              </a>
+            </Button>
+          )}
+          {secondaryLabel && (
+            <Button asChild variant="hero-outline" size="lg" className="gap-2 px-8 h-12">
+              <a href={secondaryUrl} target="_blank" rel="noopener noreferrer">
+                <MessageSquare size={16} /> {secondaryLabel}
+              </a>
+            </Button>
+          )}
         </div>
       </div>
     </section>

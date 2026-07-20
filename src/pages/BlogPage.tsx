@@ -33,10 +33,11 @@ const BlogPage = () => {
     fallbackDescription: "Read insights and perspectives on enterprise AI execution.",
   });
 
-  // Page-builder blocks (modern path — page with slug "resources/blog")
+  // Page-builder blocks (modern path). The URL is /resources/blog but the CMS
+  // slug is flat ("resources-blog") because slug is a uid field (no slashes).
   const { data: blocks } = useQuery({
-    queryKey: ["page-blocks", "resources/blog"],
-    queryFn: () => getPageBlocks("resources/blog"),
+    queryKey: ["page-blocks", "resources-blog"],
+    queryFn: () => getPageBlocks("resources-blog"),
     staleTime: 5 * 60 * 1000,
     refetchOnMount: false,
   });
