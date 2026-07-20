@@ -423,3 +423,51 @@ export async function getFaqs(options?: { category?: string }) {
   );
   return normalizeList<FaqAttributes>(raw);
 }
+/** Fetch a Resource Page's pageBuilder blocks by slug.*/
+export async function getResourcePageBlocks(slug: string): Promise<PageBlock[]> {
+  try {
+    const raw = await strapiGet<{ data?: Record<string, unknown> }>(
+      `/api/resource-pages/slug/${encodeURIComponent(slug)}`
+    );
+    if (raw.data?.pageBuilder) {
+      return raw.data.pageBuilder as PageBlock[];
+    }
+  } catch {
+    // custom endpoint not available — fall through to generic REST fetch
+  }
+
+  try {
+    const qs = buildQS({
+      "filters[slug][$eq]": slug,
+      "populate[pageBuilder][populate]": "*",
+    });
+    const raw = await strapiGet<{ data?: Record<string, unknown>[] }>(
+      "/api/resource-pages",
+      qs
+    );
+    const entry = raw.data?.[0];
+    return (entry?.pageBuilder as PageBlock[] | undefined) ?? [];
+  } catch {
+    return [];
+  }
+}
+interface StrapiBlockNode {
+  type?: string;
+  text?: string;
+  children?: StrapiBlockNode[];
+}
+
+/** Convert Strapi Blocks rich-text (array of nodes) to plain text.
+ *  Use this instead of stripHtml() for any `description` field that comes
+ *  back as an array rather than an HTML string. */
+export function blocksToText(blocks: StrapiBlockNode[] | string | null | undefined): string {
+  if (!blocks) return "";
+  if (typeof blocks === "string") return stripHtml(blocks); // legacy HTML string fallback
+  if (!Array.isArray(blocks)) return "";
+  return blocks
+    .map((node) =>
+      (node.children ?? []).map((child) => child.text ?? "").join("")
+    )
+    .join("\n\n")
+    .trim();
+}

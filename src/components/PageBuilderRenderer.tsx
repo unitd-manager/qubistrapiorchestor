@@ -23,7 +23,14 @@ import IconGridSection from "@/components/IconGridSection";
 import ExecutionSection from "@/components/ExecutionSection";
 import ComparisonSection from "@/components/ComparisonSection";
 import FaqSection from "@/components/FaqSection";
+import DemoHeroSection from "@/components/DemoHeroSection";
+import DemoVideoShowcaseSection from "@/components/DemoVideoShowcaseSection";
+import DemoCapabilityCardSection from "@/components/DemoCapabilityCardSection";
+import DemoContactCtaSection from "@/components/DemoContactCtaSection";
 import type { PageBlock } from "@/lib/strapi";
+import FaqHeroSection from "@/components/FaqHeroSection";
+import FaqListSection from "@/components/FaqListSection";
+import FaqCtaSection from "@/components/FaqCtaSection";
 
 const BLOCK_COMPONENTS: Record<string, ComponentType<any>> = {
   "acf-sections.qubi-home-hero": HeroSection,
@@ -50,6 +57,14 @@ const BLOCK_COMPONENTS: Record<string, ComponentType<any>> = {
   "acf-sections.qubi-faq-section": FaqSection,
   "acf-sections.qubi-blog-list-section": BlogListSection,
   "acf-sections.qubi-subscribe-cta-section": SubscribeCtaSection,
+  // Demo page — category is "demo-sections" in Strapi, not "acf-sections"
+  "acf-sections.demo-sections-hero": DemoHeroSection,
+  "acf-sections.demo-sections-video-showcase": DemoVideoShowcaseSection,
+  "acf-sections.demo-sections-capability-card": DemoCapabilityCardSection,
+  "acf-sections.demo-sections-contact-cta": DemoContactCtaSection,
+  "acf-sections.faq-hero": FaqHeroSection,
+  "acf-sections.faq-list": FaqListSection,
+  "acf-sections.faq-cta": FaqCtaSection,
 };
 
 export function PageBuilderRenderer({ blocks }: { blocks: PageBlock[] }) {
@@ -63,9 +78,6 @@ export function PageBuilderRenderer({ blocks }: { blocks: PageBlock[] }) {
           }
           return null;
         }
-        // Strapi v5 blocks are flat — spread the block fields directly as props.
-        // Component ids are only unique per component type, so a page using the
-        // same block type twice can repeat an id; the index keeps keys unique.
         const { id, __component, ...props } = block;
         return <Component key={`${__component}-${id ?? "x"}-${i}`} {...props} />;
       })}
