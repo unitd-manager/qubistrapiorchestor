@@ -23,6 +23,16 @@ import IconGridSection from "@/components/IconGridSection";
 import ExecutionSection from "@/components/ExecutionSection";
 import ComparisonSection from "@/components/ComparisonSection";
 import FaqSection from "@/components/FaqSection";
+// ── Solutions family (Use Cases / Industries) blocks ───────────────────────
+import SolutionsHeroBanner from "@/components/SolutionsHeroBanner";
+import SolutionsStatsBand from "@/components/SolutionsStatsBand";
+import SolutionsUseCasesLayout from "@/components/SolutionsUseCasesLayout";
+import SolutionsIndustryLayout from "@/components/SolutionsIndustryLayout";
+import SolutionsExecutionFlow from "@/components/SolutionsExecutionFlow";
+import SolutionsFinalCTA from "@/components/SolutionsFinalCTA";
+import SolutionsComparisonBlock from "@/components/SolutionsComparisonBlock";
+import SolutionsProblemsBlock from "@/components/SolutionsProblemsBlock";
+import SolutionsWhatWeDo from "@/components/SolutionsWhatWeDo";
 import type { PageBlock } from "@/lib/strapi";
 
 const BLOCK_COMPONENTS: Record<string, ComponentType<any>> = {
@@ -50,6 +60,16 @@ const BLOCK_COMPONENTS: Record<string, ComponentType<any>> = {
   "acf-sections.qubi-faq-section": FaqSection,
   "acf-sections.qubi-blog-list-section": BlogListSection,
   "acf-sections.qubi-subscribe-cta-section": SubscribeCtaSection,
+  // Solutions family
+  "acf-sections.solutions-hero-banner": SolutionsHeroBanner,
+  "acf-sections.solutions-stats-band": SolutionsStatsBand,
+  "acf-sections.solutions-use-cases-layout": SolutionsUseCasesLayout,
+  "acf-sections.solutions-industry-layout": SolutionsIndustryLayout,
+  "acf-sections.solutions-execution-flow": SolutionsExecutionFlow,
+  "acf-sections.solutions-final-cta": SolutionsFinalCTA,
+  "acf-sections.solutions-comparison-block": SolutionsComparisonBlock,
+  "acf-sections.solutions-problems-block": SolutionsProblemsBlock,
+  "acf-sections.solutions-what-we-do": SolutionsWhatWeDo,
 };
 
 export function PageBuilderRenderer({ blocks }: { blocks: PageBlock[] }) {
