@@ -5,7 +5,7 @@ import Footer from "@/components/Footer";
 import { SEOHead } from "@/components/SEOHead";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Clock, User } from "lucide-react";
-import { getBlogByDocumentId, getBlogs, mediaUrl, stripHtml, type BlogAttributes, type StrapiItem } from "@/lib/strapi";
+import { getBlogByDocumentId, getBlogs, getBlogCategories, blogCategoryName, mediaUrl, stripHtml, type BlogAttributes, type StrapiItem } from "@/lib/strapi";
 import type { SEOMetadata } from "@/types/seo";
 
 function formatBlogDate(dateStr: string | null | undefined): string {
@@ -137,11 +137,22 @@ export default function BlogDetailPage() {
     staleTime: 5 * 60 * 1000,
   });
 
-  const allRecent = (recentData?.data ?? []).filter((p) => p.attributes.us_title);
+  // Central category list from the Blog Category collection (falls back to the
+  // categories derived from articles if the collection is empty/unavailable).
+  const { data: categoryList } = useQuery({
+    queryKey: ["blog-categories"],
+    queryFn: () => getBlogCategories(),
+    staleTime: 5 * 60 * 1000,
+  });
+
+  const allRecent = (recentData?.data ?? []).filter((p) => blogCategoryName(p.attributes));
   const recentPosts = allRecent
     .filter((p) => (documentId ? p.attributes.documentId !== documentId : true))
     .slice(0, 5);
-  const categories = Array.from(new Set(allRecent.map((p) => p.attributes.us_title).filter(Boolean))).slice(0, 20);
+  const derivedCategories = Array.from(
+    new Set(allRecent.map((p) => blogCategoryName(p.attributes)).filter(Boolean))
+  );
+  const categories = (categoryList && categoryList.length ? categoryList : derivedCategories).slice(0, 20);
 
   return (
     <div className="min-h-screen">
@@ -184,9 +195,9 @@ export default function BlogDetailPage() {
                 )}
 
                 <div className="mt-8">
-                  {blog.attributes.us_title && (
+                  {blogCategoryName(blog.attributes) && (
                     <div className="inline-flex items-center px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-semibold border border-primary/20">
-                      {blog.attributes.us_title}
+                      {blogCategoryName(blog.attributes)}
                     </div>
                   )}
 

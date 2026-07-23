@@ -1,16 +1,17 @@
 import { useState, useRef, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { getNavbarBootstrapData } from "@/lib/bootstrap";
 import qubiLogo from "@/assets/qubi-logo.png";
 import { Menu, X, ChevronDown } from "lucide-react";
-import { getNavPages, type NavbarLink, type NavbarSectionData } from "@/lib/strapi";
+import { getMenu, getSiteSettings, type NavbarLink, type NavbarSectionData, type SiteSettings } from "@/lib/strapi";
 
-/** Fixed developer routes (not client Pages) — grouped as dropdowns, same as live. */
-const STATIC_DROPDOWNS: Array<NavbarSectionData & { order: number }> = [
+/** Fallback shown only if the Menu Manager can't be reached. */
+const FALLBACK_MENU: NavbarSectionData[] = [
+  { title: "Home", items: [], href: "/" },
+  { title: "Customers", items: [], href: "/customers" },
+  { title: "Pricing", items: [], href: "/pricing" },
   {
     title: "Resources",
-    order: 10,
     items: [
       { label: "Blog", href: "/resources/blog" },
       { label: "Product Demo", href: "/resources/demo" },
@@ -19,13 +20,14 @@ const STATIC_DROPDOWNS: Array<NavbarSectionData & { order: number }> = [
   },
   {
     title: "Solutions",
-    order: 11,
     items: [
       { label: "Use Cases", href: "/solutions/use-cases" },
       { label: "Industries", href: "/solutions/industries" },
     ],
   },
 ];
+
+const FALLBACK_CTA: SiteSettings = { cta_label: "Book a Demo", cta_url: "https://meetings.hubspot.com/maheshv" };
 
 const isPathActive = (pathname: string, href: string) => {
   if (href === "/") return pathname === "/";
@@ -88,44 +90,39 @@ const DropdownMenu = ({
 };
 
 const Navbar = () => {
-  const bootstrappedNavSections = getNavbarBootstrapData();
-  const [navSections, setNavSections] = useState<NavbarSectionData[]>(bootstrappedNavSections ?? []);
+  const [navSections, setNavSections] = useState<NavbarSectionData[]>([]);
+  const [cta, setCta] = useState<SiteSettings>(FALLBACK_CTA);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [mobileOpenSections, setMobileOpenSections] = useState<Set<number>>(new Set());
   const location = useLocation();
 
   useEffect(() => {
-    if (bootstrappedNavSections?.length) {
-      setNavSections(bootstrappedNavSections);
-      return;
-    }
-
     let cancelled = false;
 
-    const fetchNavItems = async () => {
+    const fetchMenu = async () => {
       try {
-        const pages = await getNavPages();
-        const merged = [
-          ...pages.map((p, i) => ({ ...p, order: i })),
-          ...STATIC_DROPDOWNS,
-        ].sort((a, b) => a.order - b.order);
+        const [menu, settings] = await Promise.all([getMenu("header"), getSiteSettings()]);
         if (!cancelled) {
-          setNavSections(merged);
+          setNavSections(menu.length ? menu : FALLBACK_MENU);
+          setCta({
+            cta_label: settings.cta_label || FALLBACK_CTA.cta_label,
+            cta_url: settings.cta_url || FALLBACK_CTA.cta_url,
+          });
         }
       } catch (error) {
-        console.error("Failed to fetch navbar items:", error);
+        console.error("Failed to fetch navbar menu:", error);
         if (!cancelled) {
-          setNavSections(STATIC_DROPDOWNS);
+          setNavSections(FALLBACK_MENU);
         }
       }
     };
 
-    fetchNavItems();
+    fetchMenu();
 
     return () => {
       cancelled = true;
     };
-  }, [bootstrappedNavSections]);
+  }, []);
 
   // Close mobile menu on route change
   useEffect(() => {
@@ -177,8 +174,8 @@ const Navbar = () => {
 
         <div className="hidden md:block">
           <Button asChild variant="hero" size="lg">
-            <a href="https://meetings.hubspot.com/maheshv" target="_blank" rel="noopener noreferrer">
-              Book a Demo
+            <a href={cta.cta_url} target="_blank" rel="noopener noreferrer">
+              {cta.cta_label}
             </a>
           </Button>
         </div>
@@ -261,8 +258,8 @@ const Navbar = () => {
           })}
 
           <Button asChild variant="hero" size="lg" className="w-full mt-2">
-            <a href="https://meetings.hubspot.com/maheshv" target="_blank" rel="noopener noreferrer" className="block w-full">
-              Book a Demo
+            <a href={cta.cta_url} target="_blank" rel="noopener noreferrer" className="block w-full">
+              {cta.cta_label}
             </a>
           </Button>
         </div>

@@ -116,6 +116,70 @@ export interface NavbarSectionData {
   href?: string;
 }
 
+export interface SiteSettings {
+  footer_company_name?: string;
+  cta_label?: string;
+  cta_url?: string;
+}
+
+/**
+ * Fetch the header or footer menu from the Menu Manager (menu-item collection).
+ * Top-level header items with children render as dropdowns; the rest are
+ * direct links. Fully client-managed in the admin.
+ */
+export async function getMenu(location: "header" | "footer"): Promise<NavbarSectionData[]> {
+  const raw = await strapiGet<{ data?: Array<Record<string, unknown>> }>(
+    "/api/menu-items",
+    `?filters[location][$eq]=${location}&filters[parent][id][$null]=true&populate[children][sort][0]=order:asc&sort[0]=order:asc&pagination[pageSize]=100`
+  );
+
+  return (raw.data ?? []).map((item) => {
+    const children = (item.children as Array<Record<string, unknown>> | undefined) ?? [];
+    if (children.length > 0) {
+      return {
+        title: String(item.label ?? ""),
+        items: children.map((c) => ({ label: String(c.label ?? ""), href: String(c.url ?? "#") })),
+      };
+    }
+    return {
+      title: String(item.label ?? ""),
+      items: [],
+      href: String(item.url ?? "#"),
+    };
+  });
+}
+
+export async function getSiteSettings(): Promise<SiteSettings> {
+  try {
+    const raw = await strapiGet<{ data?: SiteSettings }>("/api/site-setting", "");
+    return raw.data ?? {};
+  } catch {
+    return {};
+  }
+}
+
+export interface FooterData {
+  copyright_text?: string;
+  links: NavbarLink[];
+}
+
+/** The whole footer from the self-contained Footer single type. */
+export async function getFooter(): Promise<FooterData> {
+  try {
+    const raw = await strapiGet<{ data?: { copyright_text?: string; links?: Array<Record<string, unknown>> } }>(
+      "/api/footer",
+      "?populate[links]=true"
+    );
+    const links = (raw.data?.links ?? []).map((l) => ({
+      label: String(l.label ?? ""),
+      href: String(l.url ?? "#"),
+    }));
+    return { copyright_text: raw.data?.copyright_text, links };
+  } catch {
+    return { links: [] };
+  }
+}
+
 export interface EnquiryPayload {
   first_name: string;
   last_name?: string;
@@ -205,7 +269,7 @@ export function mediaUrl(url: string | null | undefined): string {
 
 export async function getBlogs(options?: { featured?: boolean; limit?: number }) {
   const qs =
-    "?populate=images" +
+    "?populate[images]=true&populate[blog_category]=true" +
     "&filters[published][$eq]=true" +
     (options?.featured !== undefined ? `&filters[flag][$eq]=${options.featured}` : "") +
     "&sort[0]=date:desc" +
@@ -214,13 +278,35 @@ export async function getBlogs(options?: { featured?: boolean; limit?: number })
   return normalizeList<BlogAttributes>(raw);
 }
 
+/** The central blog category list, for the sidebar and filters. */
+export async function getBlogCategories(): Promise<string[]> {
+  try {
+    const raw = await strapiGet<{ data?: Array<Record<string, unknown>> }>(
+      "/api/blog-categories",
+      "?sort[0]=sort_order:asc&fields[0]=name&pagination[pageSize]=100"
+    );
+    return (raw.data ?? []).map((c) => String(c.name ?? "")).filter(Boolean);
+  } catch {
+    return [];
+  }
+}
+
+/** Category label for a blog: the linked category name, or the legacy us_title. */
+export function blogCategoryName(attributes: BlogAttributes | undefined): string {
+  const rel = (attributes as Record<string, unknown> | undefined)?.blog_category as
+    | { name?: string }
+    | null
+    | undefined;
+  return rel?.name || attributes?.us_title || "";
+}
+
 export async function getBlogById(id: number) {
   const raw = await strapiGet<unknown>(`/api/blogs/${id}?populate=images`);
   return normalizeOne<BlogAttributes>(raw);
 }
 
 export async function getBlogByDocumentId(documentId: string) {
-  const raw = await strapiGet<unknown>(`/api/blogs/${encodeURIComponent(documentId)}?populate=images`);
+  const raw = await strapiGet<unknown>(`/api/blogs/${encodeURIComponent(documentId)}?populate[images]=true&populate[blog_category]=true`);
   return normalizeOne<BlogAttributes>(raw);
 }
 

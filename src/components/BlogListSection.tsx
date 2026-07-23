@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Link, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Clock, Tag } from "lucide-react";
-import { getBlogs, stripHtml, type StrapiItem, type BlogAttributes } from "@/lib/strapi";
+import { getBlogs, blogCategoryName, stripHtml, type StrapiItem, type BlogAttributes } from "@/lib/strapi";
 
 interface BlogListSectionProps {
   main_title?: string;
@@ -38,11 +38,13 @@ const BlogListSection = ({ main_title, show_featured = true, max_posts = 50 }: B
   const [searchParams] = useSearchParams();
   const selectedCategory = searchParams.get("category");
 
-  // Use only qBotica posts (those with us_title set)
-  const allPosts: StrapiItem<BlogAttributes>[] = (blogsData?.data ?? []).filter((p) => p.attributes.us_title);
+  // Use only qBotica posts (those that have a category — relation or legacy us_title)
+  const allPosts: StrapiItem<BlogAttributes>[] = (blogsData?.data ?? []).filter((p) =>
+    blogCategoryName(p.attributes)
+  );
 
   const visiblePosts = selectedCategory
-    ? allPosts.filter((p) => p.attributes.us_title === selectedCategory)
+    ? allPosts.filter((p) => blogCategoryName(p.attributes) === selectedCategory)
     : allPosts;
 
   const featuredPost = show_featured ? (visiblePosts.find((p) => p.attributes.flag === true) ?? null) : null;
@@ -61,7 +63,7 @@ const BlogListSection = ({ main_title, show_featured = true, max_posts = 50 }: B
             >
               <div className="flex items-center gap-3 mb-4">
                 <span className="px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-semibold">
-                  {featuredPost.attributes.us_title}
+                  {blogCategoryName(featuredPost.attributes)}
                 </span>
                 <span className="text-xs text-muted-foreground px-2 py-1 rounded-full bg-surface-elevated border border-border">
                   Featured
@@ -104,7 +106,7 @@ const BlogListSection = ({ main_title, show_featured = true, max_posts = 50 }: B
               >
                 <div className="flex items-center gap-2 mb-4">
                   <Tag size={12} className="text-primary" />
-                  <span className="text-xs font-semibold text-primary">{post.attributes.us_title}</span>
+                  <span className="text-xs font-semibold text-primary">{blogCategoryName(post.attributes)}</span>
                 </div>
                 <h3 className="text-lg font-semibold text-foreground mb-3 group-hover:text-primary transition-colors leading-snug">
                   {post.attributes.title}
