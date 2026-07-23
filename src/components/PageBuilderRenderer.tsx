@@ -34,6 +34,9 @@ import SolutionsComparisonBlock from "@/components/SolutionsComparisonBlock";
 import SolutionsProblemsBlock from "@/components/SolutionsProblemsBlock";
 import SolutionsWhatWeDo from "@/components/SolutionsWhatWeDo";
 import type { PageBlock } from "@/lib/strapi";
+import FaqHeroSection from "@/components/FaqHeroSection";
+import FaqListSection from "@/components/FaqListSection";
+import FaqCtaSection from "@/components/FaqCtaSection";
 
 const BLOCK_COMPONENTS: Record<string, ComponentType<any>> = {
   "acf-sections.qubi-home-hero": HeroSection,
@@ -83,9 +86,6 @@ export function PageBuilderRenderer({ blocks }: { blocks: PageBlock[] }) {
           }
           return null;
         }
-        // Strapi v5 blocks are flat — spread the block fields directly as props.
-        // Component ids are only unique per component type, so a page using the
-        // same block type twice can repeat an id; the index keeps keys unique.
         const { id, __component, ...props } = block;
         return <Component key={`${__component}-${id ?? "x"}-${i}`} {...props} />;
       })}
