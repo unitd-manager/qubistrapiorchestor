@@ -18,7 +18,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
           cache: npm
 
       # Install dependencies
@@ -38,8 +38,10 @@ jobs:
           ssh-keyscan -H ${{ secrets.SERVER_HOST }} >> ~/.ssh/known_hosts
 
       # Deploy build files
-      - name: Deploy to aaPanel
-        run: |
-          rsync -avz --delete \
-            dist/ \
-            ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}:${{ secrets.SERVER_PATH }}/
+     - name: Deploy to aaPanel
+  run: |
+    rsync -avz --delete \
+      --exclude='.user.ini' \
+      --exclude='.htaccess' \
+      dist/ \
+      ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}:${{ secrets.SERVER_PATH }}/
