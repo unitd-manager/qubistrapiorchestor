@@ -43,3 +43,4 @@ jobs:
             --exclude='.well-known' \
             dist/ \
             ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}:${{ secrets.SERVER_PATH }}/
+
