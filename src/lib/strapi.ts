@@ -172,6 +172,51 @@ export async function getFooter(): Promise<FooterData> {
   }
 }
 
+// ─── Header (single type) ─────────────────────────────────────────────────
+// Distinct type names on purpose so they don't clash with the existing
+// NavbarLink/NavbarSectionData used by getMenu (Menu Item collection).
+
+export interface HeaderNavChild {
+  label: string;
+  url: string;
+  publish?: boolean;
+}
+
+export interface HeaderNavLink {
+  label: string;
+  url?: string;
+  publish?: boolean;
+  children?: HeaderNavChild[];
+}
+
+export interface HeaderData {
+  logo?: StrapiMediaAsset;
+  logo_link?: string;
+  nav_links: HeaderNavLink[];
+  cta_label?: string;
+  cta_url?: string;
+}
+
+export async function getHeaderData(): Promise<HeaderData> {
+  try {
+    const raw = await strapiGet<{ data?: Record<string, unknown> }>(
+      "/api/header",
+      "?populate[logo]=true&populate[nav_links][populate][children]=true"
+    );
+    const attrs = raw.data ?? {};
+
+    return {
+      logo: (attrs.logo as StrapiMediaAsset | undefined) ?? undefined,
+      logo_link: (attrs.logo_link as string | undefined) ?? "/",
+      nav_links: (attrs.nav_links as HeaderNavLink[] | undefined) ?? [],
+      cta_label: attrs.cta_label as string | undefined,
+      cta_url: attrs.cta_url as string | undefined,
+    };
+  } catch {
+    return { nav_links: [] };
+  }
+}
+
 export interface EnquiryPayload {
   first_name: string;
   last_name?: string;
@@ -231,9 +276,8 @@ async function strapiPost<T>(path: string, body: unknown): Promise<T> {
 // all page mapping functions continue working without changes.
 function normalizeItem<A>(raw: Record<string, unknown>): StrapiItem<A> {
   const { id, ...rest } = raw;
-  return { id: id as number, attributes: rest as A };
+  return { id: id as number, attributes: rest as unknown as A };
 }
-
 function normalizeList<A>(raw: unknown): StrapiResponse<StrapiItem<A>[]> {
   const r = raw as { data: Record<string, unknown>[]; meta: StrapiMeta };
   return { data: (r.data ?? []).map((item) => normalizeItem<A>(item)), meta: r.meta ?? {} };
@@ -285,8 +329,7 @@ export async function getBlogCategories(): Promise<string[]> {
 
 /** Category label for a blog: the linked category name, or the legacy us_title. */
 export function blogCategoryName(attributes: BlogAttributes | undefined): string {
-  const rel = (attributes as Record<string, unknown> | undefined)?.blog_category as
-    | { name?: string }
+const rel = (attributes as unknown as Record<string, unknown> | undefined)?.blog_category as    | { name?: string }
     | null
     | undefined;
   return rel?.name || attributes?.us_title || "";
