@@ -37,6 +37,12 @@ import type { PageBlock } from "@/lib/strapi";
 import FaqHeroSection from "@/components/FaqHeroSection";
 import FaqListSection from "@/components/FaqListSection";
 import FaqCtaSection from "@/components/FaqCtaSection";
+// ── Demo page blocks ────────────────────────────────────────────────────────
+import DemoHeroSection from "@/components/DemoHeroSection";
+import DemoVideoShowcaseSection from "@/components/DemoVideoShowcaseSection";
+import DemoCapabilityCardSection from "@/components/DemoCapabilityCardSection";
+import DemoContactCtaSection from "@/components/DemoContactCtaSection";
+import Footer from "@/components/Footer";
 
 const BLOCK_COMPONENTS: Record<string, ComponentType<any>> = {
   "acf-sections.qubi-home-hero": HeroSection,
@@ -73,6 +79,16 @@ const BLOCK_COMPONENTS: Record<string, ComponentType<any>> = {
   "acf-sections.solutions-comparison-block": SolutionsComparisonBlock,
   "acf-sections.solutions-problems-block": SolutionsProblemsBlock,
   "acf-sections.solutions-what-we-do": SolutionsWhatWeDo,
+  // Demo page family
+  "acf-sections.demo-sections-hero": DemoHeroSection,
+  "acf-sections.demo-sections-video-showcase": DemoVideoShowcaseSection,
+  "acf-sections.demo-sections-capability-card": DemoCapabilityCardSection,
+  "acf-sections.demo-sections-contact-cta": DemoContactCtaSection,
+  // FAQ page family
+  "acf-sections.faq-hero": FaqHeroSection,
+  "acf-sections.faq-list": FaqListSection,
+  "acf-sections.faq-cta": FaqCtaSection,
+  "acf-sections.footer-section": Footer
 };
 
 export function PageBuilderRenderer({ blocks }: { blocks: PageBlock[] }) {

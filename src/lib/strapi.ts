@@ -160,23 +160,15 @@ export async function getSiteSettings(): Promise<SiteSettings> {
 
 export interface FooterData {
   copyright_text?: string;
-  links: NavbarLink[];
 }
 
-/** The whole footer from the self-contained Footer single type. */
+/** The footer copyright line from the self-contained Footer single type. */
 export async function getFooter(): Promise<FooterData> {
   try {
-    const raw = await strapiGet<{ data?: { copyright_text?: string; links?: Array<Record<string, unknown>> } }>(
-      "/api/footer",
-      "?populate[links]=true"
-    );
-    const links = (raw.data?.links ?? []).map((l) => ({
-      label: String(l.label ?? ""),
-      href: String(l.url ?? "#"),
-    }));
-    return { copyright_text: raw.data?.copyright_text, links };
+    const raw = await strapiGet<{ data?: { copyright_text?: string } }>("/api/footer");
+    return { copyright_text: raw.data?.copyright_text };
   } catch {
-    return { links: [] };
+    return {};
   }
 }
 
