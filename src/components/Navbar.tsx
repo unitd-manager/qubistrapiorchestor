@@ -56,7 +56,7 @@ const DropdownMenu = ({ label, items }: { label: string; items: HeaderNavChild[]
   return (
     <div ref={ref} className="relative">
       <button
-        className={`flex items-center gap-1 text-[18px] font-semibold tracking-[-0.2px] transition-colors ${
+        className={`flex items-center gap-0.9 text-[14px] font-semibold tracking-[-0.2px] transition-colors ${
           isActive ? "text-primary" : "text-muted-foreground hover:text-primary"
         }`}
         onClick={() => setOpen((o) => !o)}
@@ -184,7 +184,7 @@ const Navbar = () => {
                   <Link
                     key={link.label}
                     to={link.url}
-                    className={`text-[18px] font-semibold tracking-[-0.2px] transition-colors ${
+                    className={`text-[14px] font-semibold tracking-[-0.2px] transition-colors ${
                       active ? "text-primary" : "text-muted-foreground hover:text-primary"
                     }`}
                   >

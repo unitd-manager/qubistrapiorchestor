@@ -90,6 +90,7 @@ const DemoContactCtaSection = ({
 
   return (
     <section id="book-demo" className="pt-24 pb-12 lg:pt-28 lg:pb-16 bg-surface-elevated border-y border-border scroll-mt-24">
+      
       <div className="container mx-auto px-4 lg:px-8">
         <div className="max-w-3xl mx-auto">
           {(heading || description) && (
@@ -131,13 +132,12 @@ const DemoContactCtaSection = ({
                     {isTextarea ? (
                       <textarea
                         id={`demo-${key}`}
-                        rows={3}
                         required={isRequired}
                         value={values[key]}
                         onChange={(e) => handleChange(key, e.target.value)}
                         placeholder={f.placeholder}
-                        style={{ height: "100px" }}
-                        className="rounded-lg border border-border bg-background px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 resize-none"
+                        rows={4}
+                        className="w-full rounded-xl border-2 border-dashed border-primary/40 bg-primary/5 px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground/70 placeholder:italic focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary focus:border-solid resize-none transition-colors"
                       />
                     ) : (
                       <input
