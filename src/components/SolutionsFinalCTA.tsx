@@ -5,6 +5,7 @@ import { stripHtml } from "@/lib/strapi";
 interface SolutionsFinalCTAProps {
   heading?: string;
   highlightedHeading?: string;
+  trailingHeading?: string;
   description?: string;
   buttonLabel?: string;
   buttonUrl?: string;
@@ -14,6 +15,7 @@ interface SolutionsFinalCTAProps {
 const SolutionsFinalCTA = ({
   heading,
   highlightedHeading,
+  trailingHeading,
   description,
   buttonLabel,
   buttonUrl,
@@ -23,7 +25,7 @@ const SolutionsFinalCTA = ({
       <div className="absolute inset-0 bg-gradient-glow pointer-events-none opacity-50" />
       <div className="relative container mx-auto px-4 lg:px-8 text-center">
         <h2 className="text-3xl sm:text-4xl font-bold tracking-tight text-foreground max-w-2xl mx-auto">
-          {heading} <span className="text-gradient">{highlightedHeading}</span>
+          {heading} <span className="text-gradient">{highlightedHeading}</span> {trailingHeading}
         </h2>
         {description && (
           <p className="mt-6 text-lg text-muted-foreground max-w-xl mx-auto">

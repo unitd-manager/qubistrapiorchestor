@@ -12,9 +12,19 @@ interface DemoHeroSectionProps {
 }
 
 // "|" acts as a manual line-break separator inside heading, same convention
-// used for the Lightwarp title fields
-const renderHeading = (heading: string, highlight?: string) =>
-  heading.split("|").map((line, i, arr) => {
+// used for the Lightwarp title fields.
+// If the CMS content doesn't include a "|", we force a break after the
+// first 3 words so the heading always renders on two lines (matches design).
+const renderHeading = (heading: string, highlight?: string) => {
+  const normalized = heading.includes("|")
+    ? heading
+    : (() => {
+        const words = heading.trim().split(/\s+/);
+        if (words.length <= 3) return heading;
+        return `${words.slice(0, 3).join(" ")}|${words.slice(3).join(" ")}`;
+      })();
+
+  return normalized.split("|").map((line, i, arr) => {
     const trimmed = line.trim();
     const node =
       highlight && trimmed.includes(highlight) ? (
@@ -33,12 +43,13 @@ const renderHeading = (heading: string, highlight?: string) =>
       </span>
     );
   });
+};
 
 const DemoHeroSection = ({ eyebrow_text, heading, highlighted_word, description, cta_label, cta_link }: DemoHeroSectionProps) => {
   const sub = blocksToText(description);
 
   return (
-    <section className="relative pt-20 overflow-hidden bg-background">
+    <section className="relative pt-32 overflow-hidden bg-background">
       <div className="absolute inset-0 bg-gradient-glow pointer-events-none" />
       <div className="relative container mx-auto px-4 lg:px-8 py-12 lg:py-16 text-center">
         {eyebrow_text && (

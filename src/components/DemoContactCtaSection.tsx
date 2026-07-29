@@ -70,7 +70,7 @@ const DemoContactCtaSection = ({
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
     const missingRequired = fields.some(
-      (f) => f.is_required && !values[f.field_name || slugify(f.label)]
+      (f, idx) => idx < 2 && !values[f.field_name || slugify(f.label)]
     );
     if (missingRequired) return;
     submitEnquiry();
@@ -89,7 +89,7 @@ const DemoContactCtaSection = ({
   };
 
   return (
-    <section className="py-12 lg:py-16 bg-surface-elevated border-y border-border">
+    <section id="book-demo" className="pt-24 pb-12 lg:pt-28 lg:pb-16 bg-surface-elevated border-y border-border scroll-mt-24">
       <div className="container mx-auto px-4 lg:px-8">
         <div className="max-w-3xl mx-auto">
           {(heading || description) && (
@@ -118,30 +118,32 @@ const DemoContactCtaSection = ({
               onSubmit={handleSubmit}
               className="grid sm:grid-cols-2 gap-4 bg-surface-elevated border border-border rounded-2xl p-8"
             >
-              {fields.map((f) => {
+              {fields.map((f, fieldIdx) => {
                 const key = f.field_name || slugify(f.label);
                 const isTextarea = f.field_type === "textarea";
                 const spanFull = f.width === "full" || isTextarea;
+                const isRequired = fieldIdx < 2;
                 return (
                   <div key={key} className={`flex flex-col gap-1.5 ${spanFull ? "sm:col-span-2" : ""}`}>
                     <label className="text-sm font-medium text-foreground" htmlFor={`demo-${key}`}>
-                      {f.label} {f.is_required && "*"}
+                      {f.label} {isRequired && "*"}
                     </label>
                     {isTextarea ? (
                       <textarea
                         id={`demo-${key}`}
                         rows={3}
-                        required={f.is_required}
+                        required={isRequired}
                         value={values[key]}
                         onChange={(e) => handleChange(key, e.target.value)}
                         placeholder={f.placeholder}
+                        style={{ height: "100px" }}
                         className="rounded-lg border border-border bg-background px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 resize-none"
                       />
                     ) : (
                       <input
                         id={`demo-${key}`}
                         type={f.field_type || "text"}
-                        required={f.is_required}
+                        required={isRequired}
                         value={values[key]}
                         onChange={(e) => handleChange(key, e.target.value)}
                         placeholder={f.placeholder}
@@ -152,8 +154,8 @@ const DemoContactCtaSection = ({
                 );
               })}
               {cta_label && (
-                <div className="sm:col-span-2 flex justify-center">
-                  <Button type="submit" variant="hero" size="lg" className="gap-2 px-8 h-12" disabled={isPending}>
+                <div className="sm:col-span-2 flex justify-center mt-4">
+                  <Button type="submit" variant="hero" size="lg" className="gap-2 px-8 h-12 shadow-none hover:shadow-none" disabled={isPending}>
                     {isPending ? "Sending..." : cta_label} <ArrowRight size={18} />
                   </Button>
                 </div>

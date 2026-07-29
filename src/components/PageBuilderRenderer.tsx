@@ -42,6 +42,8 @@ import DemoHeroSection from "@/components/DemoHeroSection";
 import DemoVideoShowcaseSection from "@/components/DemoVideoShowcaseSection";
 import DemoCapabilityCardSection from "@/components/DemoCapabilityCardSection";
 import DemoContactCtaSection from "@/components/DemoContactCtaSection";
+// ── Global layout blocks ────────────────────────────────────────────────────
+import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 
 const BLOCK_COMPONENTS: Record<string, ComponentType<any>> = {
@@ -88,7 +90,9 @@ const BLOCK_COMPONENTS: Record<string, ComponentType<any>> = {
   "acf-sections.faq-hero": FaqHeroSection,
   "acf-sections.faq-list": FaqListSection,
   "acf-sections.faq-cta": FaqCtaSection,
-  "acf-sections.footer-section": Footer
+  // Global layout (only used if these ever appear inside a page's dynamic zone)
+  "acf-sections.header-section": Navbar,
+  "acf-sections.footer-section": Footer,
 };
 
 export function PageBuilderRenderer({ blocks }: { blocks: PageBlock[] }) {

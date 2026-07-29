@@ -1,33 +1,26 @@
 import { Play } from "lucide-react";
-import { mediaUrl, type StrapiMediaAsset } from "@/lib/strapi";
 
 interface DemoVideoShowcaseSectionProps {
   video_title?: string;
   video_subtitle?: string;
   video_url?: string;
-  thumbnail?: StrapiMediaAsset | null;
   duration_label?: string;
 }
 
-const DemoVideoShowcaseSection = ({ video_title, video_subtitle, video_url, thumbnail, duration_label }: DemoVideoShowcaseSectionProps) => {
-  // mediaUrl() is required here — raw Strapi paths without the STRAPI_URL
-  // prefix will 404 silently, same issue as the Lightwarp image bug
-  const thumbSrc = thumbnail?.url ? mediaUrl(thumbnail.url) : undefined;
-
+const DemoVideoShowcaseSection = ({ video_title, video_subtitle, video_url, duration_label }: DemoVideoShowcaseSectionProps) => {
   const caption = [duration_label, video_subtitle].filter(Boolean).join(" - ");
 
   const card = (
     <div
-      className="relative rounded-2xl bg-surface-elevated border border-border overflow-hidden shadow-card-hover"
-      style={
-        thumbSrc
-          ? { backgroundImage: `url(${thumbSrc})`, backgroundSize: "cover", backgroundPosition: "center" }
-          : undefined
-      }
+      className="relative rounded-2xl bg-background border border-border overflow-hidden shadow-card-hover group"
+      style={{
+        backgroundImage:
+          "radial-gradient(ellipse at 50% 45%, hsl(24 100% 50% / 0.06), transparent 75%)",
+      }}
     >
-      <div className="flex flex-col items-center justify-center gap-4 py-24 bg-background/40">
-        <span className="w-16 h-16 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center">
-          <Play size={22} className="fill-primary text-primary ml-1" />
+      <div className="flex flex-col items-center justify-center gap-4 py-44">
+        <span className="w-20 h-20 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center overflow-hidden transition-colors duration-700 ease-in-out group-hover:bg-primary/30 group-hover:border-primary/50">
+          <Play size={32} className="text-primary ml-1" strokeWidth={2} />
         </span>
         {(video_title || caption) && (
           <div className="text-center">

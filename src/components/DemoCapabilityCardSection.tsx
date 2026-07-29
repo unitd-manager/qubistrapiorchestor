@@ -9,6 +9,7 @@ interface BulletPoint {
 interface CapabilityCardItem {
   id?: number;
   title?: string;
+  description?: string;
   duration_badge?: string;
   bullet_points?: BulletPoint[];
   cta_label?: string;
@@ -57,6 +58,11 @@ const DemoCapabilityCardSection = ({ title, subtitle, card = [] }: DemoCapabilit
                     </div>
                   )}
                 </div>
+                {item.description && (
+                  <p className="text-sm text-muted-foreground mb-4 leading-relaxed">
+                    {item.description}
+                  </p>
+                )}
                 {bullets.length > 0 && (
                   <div className="space-y-2 mb-6">
                     {bullets.map((b, bi) => (
