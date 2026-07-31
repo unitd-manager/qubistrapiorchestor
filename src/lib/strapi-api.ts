@@ -11,9 +11,10 @@ import {
 } from '@/types/seo';
 import { toAbsoluteUrl } from '@/lib/urls';
 
-// Use same-origin `/api` in both dev and production.
-// The deployed site already exposes `/api` and `/uploads` through nginx, which avoids CORS issues.
-const API_BASE_URL = '/api';
+// Always call the Strapi backend explicitly by its real domain, in both
+// dev and production. Falls back to the real production backend domain
+// if VITE_STRAPI_URL isn't set in .env.
+const API_BASE_URL = `${import.meta.env.VITE_STRAPI_URL ?? 'https://qubistrapiadmin.unitdtechnologies.com'}/api`;
 
 class StrapiAPIService {
   private api: AxiosInstance;
