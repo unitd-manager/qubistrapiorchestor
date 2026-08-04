@@ -123,17 +123,17 @@ const HeroSection = (props: HeroBlockProps = {}) => {
             {heroImage?.src && (
               <div className="relative rounded-2xl overflow-hidden shadow-card-hover">
                 <img
-                  src={heroImage.src}
-                  srcSet={imageSrcSet}
-                  sizes={heroImage.sizes}
-                  alt={heroImage.alt}
-                  width={heroImage.width}
-                  height={heroImage.height}
-                  className="w-full h-auto rounded-2xl"
-                  fetchPriority="high"
-                  loading="eager"
-                  decoding="async"
-                />
+  src={heroImage.src}
+  srcSet={imageSrcSet}
+  sizes={heroImage.sizes}
+  alt={heroImage.alt}
+  width={heroImage.width}
+  height={heroImage.height}
+  className="w-full h-auto rounded-2xl"
+  loading="eager"
+  decoding="async"
+  {...{ fetchpriority: "high" }}
+/>
                 <div className="absolute inset-0 rounded-2xl ring-1 ring-inset ring-primary/20" />
               </div>
             )}

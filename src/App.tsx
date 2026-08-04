@@ -22,7 +22,6 @@ const CustomersPage = lazy(() => import("./pages/CustomersPage.tsx"));
 const PricingPage = lazy(() => import("./pages/PricingPage.tsx"));
 const BlogPage = lazy(() => import("./pages/BlogPage.tsx"));
 const BlogDetailPage = lazy(() => import("./pages/BlogDetailPage.tsx"));
-<Route path="/resources/:slug" element={<ResourcePage />} />
 const NewsroomPage = lazy(() => import("./pages/NewsroomPage.tsx"));
 const Toaster = lazy(() => import("@/components/ui/toaster").then((module) => ({ default: module.Toaster })));
 const SonnerToaster = lazy(() => import("@/components/ui/sonner").then((module) => ({ default: module.Toaster })));
@@ -64,7 +63,6 @@ const App = () => {
             <Route path="/resources/blog/:documentId" element={<BlogDetailPage />} />
             <Route path="/resources/:slug" element={<ResourcePage />} />
             <Route path="/resources/newsroom" element={<NewsroomPage />} />
-            <Route path="/resources/:slug" element={<ResourcePage />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             {/* Any page a client creates in Strapi (any slug) renders here automatically. */}
             <Route path="/:slug" element={<DynamicPage />} />

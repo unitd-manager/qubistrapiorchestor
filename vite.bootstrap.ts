@@ -576,11 +576,8 @@ export const injectBootstrapIntoHtml = (
   const bootstrapScript = `  <script id="qubi-bootstrap-data">window.__QUBI_BOOTSTRAP__=${serializeBootstrap(data)};</script>\n`;
   const prerenderHome = options.routePath === "/" || options.routePath === "/home";
   const rootMarkup = prerenderHome
-    ? `<div id="root" data-prerendered-route="${escapeHtmlAttribute(options.routePath ?? "/")}">${buildHomePrerenderShell(
-        data,
-        options.routePath ?? "/",
-      )}</div>`
-    : '<div id="root"></div>';
+  ? `<div id="root">${buildHomePrerenderShell(data, options.routePath ?? "/")}</div>`
+  : '<div id="root"></div>';
 
   out = out
     .replace(/<div id="root"><\/div>/i, rootMarkup)
