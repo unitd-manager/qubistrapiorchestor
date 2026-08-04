@@ -172,69 +172,16 @@ class StrapiAPIService {
    * Fetch SEO metadata for a specific page (uses slug instead of path)
    */
   async fetchSEOMetadata(slug: string): Promise<SEOMetadata | null> {
-    try {
-      const slugsToTry = Array.from(
-        new Set([slug, slug.startsWith('/') ? slug.slice(1) : `/${slug}`].filter(Boolean))
-      );
-
-      for (const s of slugsToTry) {
-        const queries = [
-          `/pages?filters[slug][$eq]=${encodeURIComponent(s)}`,
-          `/pages?populate[seo]=*&filters[slug][$eq]=${encodeURIComponent(s)}`,
-          `/pages?populate=seo&filters[slug][$eq]=${encodeURIComponent(s)}`,
-          `/pages?populate=*&filters[slug][$eq]=${encodeURIComponent(s)}`,
-        ];
-
-        for (const q of queries) {
-          const response = await this.api.get<unknown>(q);
-          const items = this.getPageItems(response.data);
-          if (items.length > 0) {
-            const pageData = items[0];
-            return this.normalizeSEOData(pageData, slug);
-          }
-        }
-      }
-
-      return null;
-    } catch (error) {
-      console.error('Error fetching SEO metadata:', error);
-      return null;
-    }
+    // Page slug SEO fetches disabled. Use bootstrapped route metadata or fallback metadata only.
+    return null;
   }
 
   /**
    * Fetch JSON-LD schema for a page (uses schema field from SEO component)
    */
   async fetchJSONLDSchema(slug: string): Promise<JSONLDSchema | null> {
-    try {
-      const slugsToTry = Array.from(
-        new Set([slug, slug.startsWith('/') ? slug.slice(1) : `/${slug}`].filter(Boolean))
-      );
-
-      for (const s of slugsToTry) {
-        const queries = [
-          `/pages?filters[slug][$eq]=${encodeURIComponent(s)}`,
-          `/pages?populate[seo]=*&filters[slug][$eq]=${encodeURIComponent(s)}`,
-          `/pages?populate=seo&filters[slug][$eq]=${encodeURIComponent(s)}`,
-          `/pages?populate=*&filters[slug][$eq]=${encodeURIComponent(s)}`,
-        ];
-
-        for (const q of queries) {
-          const response = await this.api.get<unknown>(q);
-          const items = this.getPageItems(response.data);
-          if (items.length > 0) {
-            const pageData = items[0];
-            const attrs = this.getPageAttributes(pageData);
-            if (attrs.seo?.schema) return attrs.seo.schema;
-          }
-        }
-      }
-
-      return null;
-    } catch (error) {
-      console.error('Error fetching JSON-LD schema:', error);
-      return null;
-    }
+    // Page slug JSON-LD fetches disabled. Use bootstrapped JSON-LD only.
+    return null;
   }
 
   /**

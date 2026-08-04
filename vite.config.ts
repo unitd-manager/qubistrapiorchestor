@@ -395,39 +395,7 @@ function prerenderSeoHtmlPlugin(mode: string): Plugin {
   };
 
   const fetchRedirects = async (): Promise<Array<{ from: string; to: string; type?: string; isActive?: boolean }>> => {
-    const urls = [
-      `${strapiBase}/api/redirects?filters[isActive][$eq]=true&pagination[limit]=1000`,
-      `${strapiBase}/api/redirects?pagination[limit]=1000`,
-    ];
-
-    for (const url of urls) {
-      try {
-        const res = await fetch(url, { headers: { Accept: "application/json" } });
-        if (!res.ok) continue;
-        const body = (await res.json()) as unknown;
-
-        const items =
-          (typeof body === "object" && body !== null && Array.isArray((body as any).data) && (body as any).data) ||
-          (typeof body === "object" && body !== null && Array.isArray((body as any).results) && (body as any).results) ||
-          [];
-
-        const rules: Array<{ from: string; to: string; type?: string; isActive?: boolean }> = [];
-        for (const item of items) {
-          if (typeof item !== "object" || item === null) continue;
-          const anyItem = item as any;
-          const attrs = (anyItem.attributes && typeof anyItem.attributes === "object" && anyItem.attributes) || anyItem;
-          const from = attrs.from;
-          const to = attrs.to;
-          if (typeof from !== "string" || typeof to !== "string") continue;
-          rules.push({ from, to, type: attrs.type, isActive: attrs.isActive });
-        }
-
-        return rules;
-      } catch {
-        continue;
-      }
-    }
-
+    // Redirects API disabled; no redirect pages will be generated during prerender.
     return [];
   };
 

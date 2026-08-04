@@ -47,18 +47,6 @@ const NewsroomPage = () => {
 
   const [pressReleases, setPressReleases] = useState(STATIC_RELEASES);
 
-  useEffect(() => {
-    fetch(
-      `${STRAPI_URL}/api/contents?filters[content_type][$eq]=newsroom&filters[published][$eq]=true&sort[0]=content_date:desc&pagination[pageSize]=50`
-    )
-      .then((r) => r.json())
-      .then((json) => {
-        const items: Record<string, unknown>[] = json?.data ?? [];
-        if (items.length > 0) setPressReleases(items.map(mapRelease));
-      })
-      .catch(() => {/* keep static fallback */});
-  }, []);
-
   const featuredReleases = pressReleases.filter((p) => p.featured);
   const otherReleases = pressReleases.filter((p) => !p.featured);
 

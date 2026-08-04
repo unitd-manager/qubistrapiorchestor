@@ -14,10 +14,6 @@ interface SEOHeadProps {
 }
 
 export const SEOHead = ({ metadata, jsonLD, additionalMeta = {} }: SEOHeadProps) => {
-  if (!metadata) {
-    return null;
-  }
-
   const {
     title,
     description,
@@ -32,16 +28,17 @@ export const SEOHead = ({ metadata, jsonLD, additionalMeta = {} }: SEOHeadProps)
     twitterTitle,
     twitterDescription,
     twitterImage,
-  } = metadata;
+  } = metadata ?? {};
+
   const normalizedCanonical = toAbsoluteUrl(canonical);
   const normalizedOgImage = toAbsoluteUrl(ogImage);
   const normalizedTwitterImage = toAbsoluteUrl(twitterImage);
 
   useEffect(() => {
+    if (!metadata) return; // guard INSIDE the effect, not before the hook call
+
     document.title = title;
-
     const managedNodes: HTMLElement[] = [];
-
     const appendMeta = (key: string, attr: 'name' | 'property', value: string) => {
       const element = document.createElement('meta');
       element.setAttribute(attr, key);
@@ -50,7 +47,6 @@ export const SEOHead = ({ metadata, jsonLD, additionalMeta = {} }: SEOHeadProps)
       document.head.appendChild(element);
       managedNodes.push(element);
     };
-
     const appendLink = (rel: string, href: string) => {
       const element = document.createElement('link');
       element.setAttribute('rel', rel);
@@ -59,7 +55,6 @@ export const SEOHead = ({ metadata, jsonLD, additionalMeta = {} }: SEOHeadProps)
       document.head.appendChild(element);
       managedNodes.push(element);
     };
-
     const appendScript = (schema: JSONLDSchema) => {
       const element = document.createElement('script');
       element.setAttribute('type', 'application/ld+json');
@@ -70,31 +65,27 @@ export const SEOHead = ({ metadata, jsonLD, additionalMeta = {} }: SEOHeadProps)
     };
 
     document.querySelectorAll('[data-seo-head="true"]').forEach((node) => node.remove());
-
     appendMeta('description', 'name', description);
     if (keywords) appendMeta('keywords', 'name', keywords);
     if (robots) appendMeta('robots', 'name', robots);
     if (normalizedCanonical) appendLink('canonical', normalizedCanonical);
-
     appendMeta('og:type', 'property', ogType || 'website');
     appendMeta('og:title', 'property', ogTitle || title);
     appendMeta('og:description', 'property', ogDescription || description);
     if (normalizedOgImage) appendMeta('og:image', 'property', normalizedOgImage);
     if (normalizedCanonical) appendMeta('og:url', 'property', normalizedCanonical);
-
     appendMeta('twitter:card', 'name', twitterCard || 'summary_large_image');
     appendMeta('twitter:title', 'name', twitterTitle || title);
     appendMeta('twitter:description', 'name', twitterDescription || description);
     if (normalizedTwitterImage) appendMeta('twitter:image', 'name', normalizedTwitterImage);
-
     Object.entries(additionalMeta).forEach(([key, value]) => appendMeta(key, 'name', value));
-
     if (jsonLD) appendScript(jsonLD);
 
     return () => {
       managedNodes.forEach((node) => node.remove());
     };
   }, [
+    metadata,
     additionalMeta,
     description,
     jsonLD,

@@ -348,25 +348,15 @@ export async function getBlogByDocumentId(documentId: string) {
 // ─── Sections ────────────────────────────────────────────────────────────────
 
 export async function getSections(sectionType?: string) {
-  const filter = sectionType ? `&filters[section_type][$eq]=${encodeURIComponent(sectionType)}` : "";
-  const raw = await strapiGet<unknown>(
-    "/api/sections",
-    `?populate=images&filters[published][$eq]=true${filter}&sort[0]=sort_order:asc&pagination[pageSize]=100`
-  );
-  return normalizeList<SectionAttributes>(raw);
+  // Sections API has been removed. Return an empty response so callers can fall back safely.
+  return { data: [], meta: {} } as StrapiResponse<StrapiItem<SectionAttributes>[]>;
 }
 
 // ─── Categories ──────────────────────────────────────────────────────────────
 
 export async function getCategories(options?: { sectionId?: number; categoryType?: string }) {
-  let filter = "";
-  if (options?.sectionId) filter += `&filters[section_id][$eq]=${options.sectionId}`;
-  if (options?.categoryType) filter += `&filters[category_type][$eq]=${encodeURIComponent(options.categoryType)}`;
-  const raw = await strapiGet<unknown>(
-    "/api/categories",
-    `?populate=images&filters[published][$eq]=true${filter}&sort[0]=sort_order:asc&pagination[pageSize]=100`
-  );
-  return normalizeList<CategoryAttributes>(raw);
+  // Categories API disabled.
+  return { data: [], meta: {} } as StrapiResponse<StrapiItem<CategoryAttributes>[]>;
 }
 
 /**
@@ -391,55 +381,8 @@ export async function getNavPages(): Promise<NavbarSectionData[]> {
 }
 
 export async function getNavbarData(): Promise<NavbarSectionData[]> {
-  const [sectionsRaw, categoriesRaw] = await Promise.all([
-    strapiGet<unknown>(
-      "/api/sections",
-      "?filters[published][$eq]=true&filters[show_in_nav][$eq]=true&sort[0]=sort_order:asc&pagination[pageSize]=100"
-    ),
-    strapiGet<unknown>(
-      "/api/categories",
-      "?filters[published][$eq]=true&filters[show_in_nav][$eq]=true&sort[0]=sort_order:asc&pagination[pageSize]=100"
-    ),
-  ]);
-
-  const sections = normalizeList<SectionAttributes>(sectionsRaw).data;
-  const categories = normalizeList<CategoryAttributes>(categoriesRaw).data;
-  const itemsBySection = new Map<number, NavbarLink[]>();
-
-  for (const category of categories) {
-    const sectionId = category.attributes.section_id;
-    const href = category.attributes.internal_link || category.attributes.external_link;
-    if (!sectionId || !href) continue;
-
-    const items = itemsBySection.get(sectionId) ?? [];
-    items.push({
-      label: category.attributes.category_title,
-      href,
-    });
-    itemsBySection.set(sectionId, items);
-  }
-
-  return sections.reduce<NavbarSectionData[]>((acc, section) => {
-    const items = itemsBySection.get(section.id) ?? [];
-    if (items.length > 0) {
-      acc.push({
-        title: section.attributes.section_title,
-        items,
-      });
-      return acc;
-    }
-
-    const href = section.attributes.internal_link || section.attributes.external_link;
-    if (href) {
-      acc.push({
-        title: section.attributes.section_title,
-        items: [],
-        href,
-      });
-    }
-
-    return acc;
-  }, []);
+  // The Sections API is removed. Navbar data is loaded via /api/header instead.
+  return [];
 }
 
 // ─── Contents ────────────────────────────────────────────────────────────────
@@ -451,17 +394,8 @@ export async function getContents(options?: {
   type?: string;
   limit?: number;
 }) {
-  let filter = "";
-  if (options?.sectionId) filter += `&filters[section_id][$eq]=${options.sectionId}`;
-  if (options?.categoryId) filter += `&filters[category_id][$eq]=${options.categoryId}`;
-  if (options?.contentType) filter += `&filters[content_type][$eq]=${encodeURIComponent(options.contentType)}`;
-  if (options?.type) filter += `&filters[type][$eq]=${encodeURIComponent(options.type)}`;
-  const limit = options?.limit ?? 50;
-  const raw = await strapiGet<unknown>(
-    "/api/contents",
-    `?populate=images&filters[published][$eq]=true${filter}&sort[0]=sort_order:asc&pagination[pageSize]=${limit}`
-  );
-  return normalizeList<ContentAttributes>(raw);
+  // Contents API disabled.
+  return { data: [], meta: {} } as StrapiResponse<StrapiItem<ContentAttributes>[]>;
 }
 
 // ─── Settings ─────────────────────────────────────────────────────────────────
@@ -487,17 +421,15 @@ export async function getSettingByKey(key: string) {
 
 /** Fetch the first published section of a given type, plus its categories */
 export async function getHomeSectionWithItems(sectionType: string, categoryType: string) {
-  const sectionResp = await getSections(sectionType);
-  const section = sectionResp.data[0] ?? null;
-  if (!section) return { section: null, items: [] as StrapiItem<CategoryAttributes>[] };
-  const itemsResp = await getCategories({ sectionId: section.id, categoryType });
-  return { section, items: itemsResp.data };
+  // The Sections API is disabled, so return items by category type only.
+  const itemsResp = await getCategories({ categoryType });
+  return { section: null, items: itemsResp.data };
 }
 
 /** Fetch only the first published section of a given type */
 export async function getHomeSection(sectionType: string) {
-  const resp = await getSections(sectionType);
-  return resp.data[0] ?? null;
+  // The Sections API is disabled. Caller should use fallback content.
+  return null;
 }
 
 // ─── Page builder (dynamic zone) ─────────────────────────────────────────────

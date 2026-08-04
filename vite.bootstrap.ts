@@ -318,132 +318,25 @@ const fetchFirstItem = async (url: string) => {
 };
 
 const fetchFirstMatchingPage = async (strapiBase: string, slugs: string[]) => {
-  for (const slug of slugs) {
-    try {
-      const item = await fetchFirstItem(
-        `${strapiBase}/api/pages?populate=*&filters[slug][$eq]=${encodeURIComponent(slug)}`
-      );
-      if (item) return item;
-    } catch {
-      continue;
-    }
-  }
-
+  // Page slug API lookups disabled. Bootstrapped metadata only.
   return null;
 };
 
 const loadNavbarData = async (strapiBase: string): Promise<NavbarSection[]> => {
-  const [sectionsBody, categoriesBody] = await Promise.all([
-    fetchJson(
-      `${strapiBase}/api/sections?filters[published][$eq]=true&filters[show_in_nav][$eq]=true&sort[0]=sort_order:asc&pagination[pageSize]=100`
-    ),
-    fetchJson(
-      `${strapiBase}/api/categories?filters[published][$eq]=true&filters[show_in_nav][$eq]=true&sort[0]=sort_order:asc&pagination[pageSize]=100`
-    ),
-  ]);
-
-  const sections = pickList(sectionsBody);
-  const categories = pickList(categoriesBody);
-  const itemsBySection = new Map<number, NavbarLink[]>();
-
-  for (const category of categories) {
-    const sectionId = typeof category.section_id === "number" ? category.section_id : null;
-    const label = typeof category.category_title === "string" ? category.category_title : "";
-    const href =
-      sanitizeUrlValue(
-        (typeof category.internal_link === "string" && category.internal_link) ||
-          (typeof category.external_link === "string" && category.external_link) ||
-          ""
-      ) ||
-      "";
-
-    if (!sectionId || !label || !href) continue;
-
-    const items = itemsBySection.get(sectionId) ?? [];
-    items.push({ label, href });
-    itemsBySection.set(sectionId, items);
-  }
-
-  return sections.reduce<NavbarSection[]>((acc, section) => {
-    if (typeof section.id !== "number" || typeof section.section_title !== "string") {
-      return acc;
-    }
-
-    const items = itemsBySection.get(section.id) ?? [];
-    if (items.length > 0) {
-      acc.push({
-        title: section.section_title,
-        items,
-      });
-      return acc;
-    }
-
-    const href =
-      sanitizeUrlValue(
-        (typeof section.internal_link === "string" && section.internal_link) ||
-          (typeof section.external_link === "string" && section.external_link) ||
-          ""
-      ) ||
-      "";
-    if (href) {
-      acc.push({
-        title: section.section_title,
-        items: [],
-        href,
-      });
-    }
-
-    return acc;
-  }, []);
+  // The Sections API is removed. Navbar build-time bootstrap data is disabled.
+  return [];
 };
 
 export const loadBootstrapData = async ({ siteUrl, strapiBase }: LoadBootstrapOptions): Promise<BootstrapData> => {
-  const [navbar, heroSection, demoSection, homePage] = await Promise.all([
-    loadNavbarData(strapiBase).catch(() => []),
-    fetchFirstItem(
-      `${strapiBase}/api/sections?populate=images&filters[published][$eq]=true&filters[section_type][$eq]=hero&sort[0]=sort_order:asc&pagination[pageSize]=1`
-    ).catch(() => null),
-    fetchFirstItem(
-      `${strapiBase}/api/sections?filters[published][$eq]=true&filters[section_type][$eq]=demo_video_section&sort[0]=sort_order:asc&pagination[pageSize]=1`
-    ).catch(() => null),
-    fetchFirstMatchingPage(strapiBase, ["/", "/home", "home"]).catch(() => null),
-  ]);
+  const navbar = await loadNavbarData(strapiBase).catch(() => []);
+  const homePage: Record<string, unknown> | null = null;
 
-  const heroImage = buildHeroImage(
-    strapiBase,
-    isObject(heroSection) && Array.isArray(heroSection.images) ? heroSection.images[0] : undefined,
-  );
-  const hero =
-    heroSection && isObject(heroSection)
-      ? {
-          badge: (typeof heroSection.template === "string" && heroSection.template) || "Agentic Automation Platform",
-          heading:
-            (typeof heroSection.section_title === "string" && heroSection.section_title) ||
-            "Design and orchestrate enterprise workflows with qubi",
-          subheading:
-            stripHtml(typeof heroSection.description === "string" ? heroSection.description : undefined) ||
-            "Connect AI agents, business systems, and human approvals in one enterprise orchestration layer.",
-          ctaLabel: (typeof heroSection.display_type === "string" && heroSection.display_type) || "Book a Demo",
-          ctaUrl:
-            sanitizeUrlValue(typeof heroSection.external_link === "string" ? heroSection.external_link : undefined) ||
-            "https://meetings.hubspot.com/maheshv",
-          image: heroImage,
-        }
-      : undefined;
-
-  const demo =
-    demoSection && isObject(demoSection)
-      ? {
-          videoTitle:
-            (typeof demoSection.section_title === "string" && demoSection.section_title) || "qubi Platform Full Demo",
-          videoDuration:
-            (typeof demoSection.description === "string" && demoSection.description) ||
-            "12 minutes End-to-end execution walkthrough",
-        }
-      : undefined;
+  // The Sections API is removed, so no hero/demo section data is available here.
+  const hero = undefined;
+  const demo = undefined;
   const seoContentHtml =
-    homePage && isObject(homePage) && typeof homePage.content === "string"
-      ? sanitizeSeoContentHtml(homePage.content)
+    homePage && isObject(homePage) && typeof homePage["content"] === "string"
+      ? sanitizeSeoContentHtml(homePage["content"] as string)
       : "";
 
   const homeRouteData = {
@@ -537,10 +430,21 @@ const buildNavbarMarkup = (navbar: NavbarSection[] | undefined, routePath: strin
     </nav>`;
 };
 
-const buildHeroMarkup = (hero: BootstrapData["routes"] extends Record<string, infer Route> ? Route extends { home?: infer Home } ? Home extends { hero?: infer Hero } ? Hero : never : never : never) => {
+const buildHeroMarkup = (
+  hero:
+    | {
+        badge: string;
+        heading: string;
+        subheading: string;
+        ctaLabel: string;
+        ctaUrl: string;
+        image?: HeroImage;
+      }
+    | undefined,
+) => {
   if (!hero) return "";
 
-  const srcSet = hero.image?.sources.map((source) => `${source.src} ${source.width}w`).join(", ");
+  const srcSet = hero.image?.sources.map((source: HeroImageSource) => `${source.src} ${source.width}w`).join(", ");
   const heroImageMarkup = hero.image?.src
     ? `<div class="animate-fade-up-delay-2 relative">
             <div class="relative rounded-2xl overflow-hidden shadow-card-hover">
@@ -575,7 +479,14 @@ const buildHeroMarkup = (hero: BootstrapData["routes"] extends Record<string, in
     </section>`;
 };
 
-const buildDemoMarkup = (demo: BootstrapData["routes"] extends Record<string, infer Route> ? Route extends { home?: infer Home } ? Home extends { demo?: infer Demo } ? Demo : never : never : never) => {
+const buildDemoMarkup = (
+  demo:
+    | {
+        videoTitle: string;
+        videoDuration: string;
+      }
+    | undefined,
+) => {
   const videoTitle = demo?.videoTitle ?? "qubi Platform Full Demo";
   const videoDuration = demo?.videoDuration ?? "12 minutes End-to-end execution walkthrough";
 
@@ -659,8 +570,8 @@ export const injectBootstrapIntoHtml = (
   const preloadLink =
     options.preloadHero && heroImage?.src
       ? `  <link rel="preload" as="image" href="${escapeHtmlAttribute(heroImage.src)}"${
-          srcSet ? ` imagesrcset="${escapeHtmlAttribute(srcSet)}"` : ""
-        }${heroImage.sizes ? ` imagesizes="${escapeHtmlAttribute(heroImage.sizes)}"` : ""} fetchpriority="high" data-qubi-hero-preload="true">\n`
+            srcSet ? ` imagesrcset="${escapeHtmlAttribute(srcSet)}"` : ""
+          }${heroImage.sizes ? ` imagesizes="${escapeHtmlAttribute(heroImage.sizes)}"` : ""} fetchpriority="high" data-qubi-hero-preload="true">\n`
       : "";
   const bootstrapScript = `  <script id="qubi-bootstrap-data">window.__QUBI_BOOTSTRAP__=${serializeBootstrap(data)};</script>\n`;
   const prerenderHome = options.routePath === "/" || options.routePath === "/home";

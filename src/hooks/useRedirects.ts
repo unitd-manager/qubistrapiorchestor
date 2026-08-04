@@ -44,39 +44,9 @@ function normalizePath(value: string): string | null {
 }
 
 async function fetchActiveRedirects(): Promise<RedirectRule[]> {
-  const url = `${API_BASE_URL}/redirects?filters[isActive][$eq]=true&pagination[limit]=1000`;
-
-  const res = await fetch(url, { headers: { Accept: 'application/json' } });
-
-  if (!res.ok) {
-    console.error(`[useRedirects] Fetch failed: ${res.status} ${res.statusText} — ${url}`);
-    return [];
-  }
-
-  const body = await res.json();
-  const items: unknown[] = Array.isArray(body?.data) ? body.data : [];
-
-  const rules: RedirectRule[] = [];
-  for (const item of items) {
-    if (typeof item !== 'object' || item === null) continue;
-    const attrs = 'attributes' in item && typeof (item as any).attributes === 'object'
-      ? (item as any).attributes
-      : item;
-
-    const { from, to, type, isActive } = attrs as Record<string, unknown>;
-    if (typeof from !== 'string' || typeof to !== 'string') continue;
-
-    rules.push({
-      id: String((item as any).id ?? ''),
-      from,
-      to,
-      type: (type as RedirectRule['type']) ?? 'permanent_301',
-      isActive: isActive !== false,
-    });
-  }
-
-  console.log(`[useRedirects] Loaded ${rules.length} active redirect rule(s):`, rules);
-  return rules;
+  // Redirects API disabled — return an empty list to avoid runtime fetches.
+  console.info('[useRedirects] Redirects API disabled; skipping fetch and returning no redirects.');
+  return [];
 }
 
 export function useRedirects() {
