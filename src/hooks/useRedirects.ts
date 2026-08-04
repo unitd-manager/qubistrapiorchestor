@@ -69,7 +69,6 @@ export function useRedirects() {
   const checkAndApplyRedirect = useCallback(
     (currentPath: string) => {
       if (redirects === null) {
-        console.log('[useRedirects] Redirects not loaded yet, skipping check for', currentPath);
         return;
       }
 
@@ -79,11 +78,11 @@ export function useRedirects() {
       const match = redirects.find((rule) => normalizePath(rule.from) === normalizedCurrent);
 
       if (!match) {
-        console.log(`[useRedirects] No redirect rule matches "${normalizedCurrent}"`);
+       
         return;
       }
 
-      console.log(`[useRedirects] MATCH: "${normalizedCurrent}" → "${match.to}" (${match.type})`);
+     
 
       const targetPath = normalizePath(match.to);
       if (targetPath && !/^https?:\/\//i.test(match.to)) {
