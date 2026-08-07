@@ -277,7 +277,8 @@ function dynamicSeoHtmlPlugin(mode: string): Plugin {
         const items = pickList(body);
 
         const item = items[0] ?? null;
-        const result = extractPageSeo(item, strapiBase) ?? {};
+        const result = extractPageSeo(item, strapiBase);
+        if (!result) continue;
 
         cache.set(slug, result);
         return result;
@@ -340,7 +341,9 @@ function prerenderSeoHtmlPlugin(mode: string): Plugin {
         const items = pickList(body);
 
         const item = items[0] ?? null;
-        return extractPageSeo(item, strapiBase) ?? {};
+        const result = extractPageSeo(item, strapiBase);
+        if (!result) continue;
+        return result;
       } catch {
         continue;
       }
@@ -394,9 +397,31 @@ function prerenderSeoHtmlPlugin(mode: string): Plugin {
     return slugs;
   };
 
-  const fetchRedirects = async (): Promise<Array<{ from: string; to: string; type?: string; isActive?: boolean }>> => {
-    // Redirects API disabled; no redirect pages will be generated during prerender.
-    return [];
+  const fetchRedirects = async (): Promise<Array<{ from: string; to: string; type: string | undefined; isActive: boolean }>> => {
+    try {
+      const url = `${strapiBase}/api/redirects?filters[isActive][$eq]=true&pagination[pageSize]=200`;
+      const res = await fetch(url, { headers: { Accept: "application/json" } });
+      if (!res.ok) return [];
+      const body = (await res.json()) as unknown;
+      const items = pickList(body);
+      return items
+        .map((item) => {
+          const attrs = isObject(item) && isObject((item as any).attributes) ? (item as any).attributes : item;
+          if (!isObject(attrs)) return null;
+          const from = typeof attrs.from === "string" ? attrs.from : undefined;
+          const to = typeof attrs.to === "string" ? attrs.to : undefined;
+          if (!from || !to) return null;
+          return {
+            from,
+            to,
+            type: typeof attrs.type === "string" ? attrs.type : undefined,
+            isActive: typeof attrs.isActive === "boolean" ? attrs.isActive : true,
+          };
+        })
+        .filter((r): r is { from: string; to: string; type: string | undefined; isActive: boolean } => r !== null);
+    } catch {
+      return [];
+    }
   };
 
   const normalizePathname = (value: string): string | null => {

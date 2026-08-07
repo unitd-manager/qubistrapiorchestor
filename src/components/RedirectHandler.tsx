@@ -9,14 +9,18 @@ import { useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { useRedirects } from '@/hooks/useRedirects';
 
-export const RedirectHandler = () => {
+interface RedirectHandlerProps {
+  enabled?: boolean;
+}
+
+export const RedirectHandler = ({ enabled = true }: RedirectHandlerProps) => {
   const location = useLocation();
   const { checkAndApplyRedirect, loading } = useRedirects();
 
   useEffect(() => {
-    if (loading) return;
+    if (!enabled || loading) return;
     checkAndApplyRedirect(location.pathname);
-  }, [location.pathname, loading, checkAndApplyRedirect]);
+  }, [enabled, location.pathname, loading, checkAndApplyRedirect]);
 
   return null;
 };

@@ -10,10 +10,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-
-const API_BASE_URL = import.meta.env.DEV
-  ? `${import.meta.env.VITE_STRAPI_URL ?? 'http://localhost:1338'}/api`
-  : '/api';
+import { strapiAPI } from '@/lib/strapi-api';
 
 interface RedirectRule {
   id: string;
@@ -44,9 +41,8 @@ function normalizePath(value: string): string | null {
 }
 
 async function fetchActiveRedirects(): Promise<RedirectRule[]> {
-  // Redirects API disabled — return an empty list to avoid runtime fetches.
-  console.info('[useRedirects] Redirects API disabled; skipping fetch and returning no redirects.');
-  return [];
+  // Pulls active redirect rules from Strapi (GET /api/redirects, isActive=true).
+  return strapiAPI.fetchRedirects();
 }
 
 export function useRedirects() {

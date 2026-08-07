@@ -318,7 +318,21 @@ const fetchFirstItem = async (url: string) => {
 };
 
 const fetchFirstMatchingPage = async (strapiBase: string, slugs: string[]) => {
-  // Page slug API lookups disabled. Bootstrapped metadata only.
+  const urls = slugs.flatMap((entry) => [
+    `${strapiBase}/api/pages?filters[slug][$eq]=${encodeURIComponent(entry)}&populate[seo]=*`,
+    `${strapiBase}/api/pages?filters[slug][$eq]=${encodeURIComponent(entry)}&populate=seo`,
+    `${strapiBase}/api/pages?filters[slug][$eq]=${encodeURIComponent(entry)}`,
+  ]);
+
+  for (const url of urls) {
+    try {
+      const item = await fetchFirstItem(url);
+      if (item) return item;
+    } catch {
+      continue;
+    }
+  }
+
   return null;
 };
 
@@ -329,7 +343,7 @@ const loadNavbarData = async (strapiBase: string): Promise<NavbarSection[]> => {
 
 export const loadBootstrapData = async ({ siteUrl, strapiBase }: LoadBootstrapOptions): Promise<BootstrapData> => {
   const navbar = await loadNavbarData(strapiBase).catch(() => []);
-  const homePage: Record<string, unknown> | null = null;
+  const homePage = await fetchFirstMatchingPage(strapiBase, ["/", "home", "/home"]).catch(() => null);
 
   // The Sections API is removed, so no hero/demo section data is available here.
   const hero = undefined;
@@ -423,7 +437,7 @@ const buildNavbarMarkup = (navbar: NavbarSection[] | undefined, routePath: strin
         </a>
         <div class="hidden md:flex items-center gap-8">${desktopItems}</div>
         <div class="hidden md:block">
-          <a href="https://meetings.hubspot.com/maheshv" target="_blank" rel="noopener noreferrer" class="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&amp;_svg]:pointer-events-none [&amp;_svg]:size-4 [&amp;_svg]:shrink-0 bg-primary text-primary-foreground hover:bg-primary/90 shadow-glow font-semibold text-base h-11 rounded-md px-8">Book a Demo</a>
+          <a href="https://meetings.hubspot.com/maheshv" target="_blank" rel="noopener noreferrer" class="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&amp;_svg]:pointer-events-none [&amp;_svg]:size-4 [&amp;_svg]:shrink-0 bg-primary text-primary-foreground hover:bg-primary/90 shadow-glow font-semibold text-base h-11 px-8">Book a Demo</a>
         </div>
         <button class="md:hidden p-2 text-foreground" aria-expanded="false" aria-controls="mobile-navigation" aria-label="Open navigation menu" type="button">${renderMenuIcon()}</button>
       </div>
@@ -470,7 +484,7 @@ const buildHeroMarkup = (
             <h1 class="animate-fade-up-delay-1 text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight leading-[1.1] text-foreground">${buildHeroHeadingMarkup(hero.heading)}</h1>
             <p class="animate-fade-up-delay-2 mt-6 text-lg sm:text-xl text-muted-foreground leading-relaxed max-w-xl">${escapeHtmlText(hero.subheading)}</p>
             <div class="animate-fade-up-delay-3 flex flex-wrap gap-4 mt-10">
-              <a href="${escapeHtmlAttribute(hero.ctaUrl)}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&amp;_svg]:pointer-events-none [&amp;_svg]:size-4 [&amp;_svg]:shrink-0 bg-primary text-primary-foreground hover:bg-primary/90 shadow-glow font-semibold text-base h-11 rounded-md px-8 gap-2 px-8 h-12">${escapeHtmlText(hero.ctaLabel)} ${renderArrowRightIcon()}</a>
+              <a href="${escapeHtmlAttribute(hero.ctaUrl)}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&amp;_svg]:pointer-events-none [&amp;_svg]:size-4 [&amp;_svg]:shrink-0 bg-primary text-primary-foreground hover:bg-primary/90 shadow-glow font-semibold text-base h-12 px-8">${escapeHtmlText(hero.ctaLabel)} ${renderArrowRightIcon()}</a>
             </div>
           </div>
           ${heroImageMarkup}
