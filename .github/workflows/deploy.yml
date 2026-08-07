@@ -14,36 +14,30 @@ jobs:
 
     steps:
 
-      # 1. Checkout source code
       - name: Checkout Repository
         uses: actions/checkout@v4
 
-      # 2. Setup Node.js
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 22
           cache: npm
 
-      # 3. Install dependencies
       - name: Install Dependencies
         run: npm ci
 
-      # 4. Build Vite frontend
       - name: Build Project
         env:
           VITE_STRAPI_URL: https://qubistrapiadmin.unitdtechnologies.com
         run: npm run build
 
-      # 5. Configure SSH
       - name: Configure SSH
         run: |
           mkdir -p ~/.ssh
           echo "${{ secrets.SERVER_SSH_KEY }}" > ~/.ssh/id_ed25519
           chmod 600 ~/.ssh/id_ed25519
-          ssh-keyscan -H "${{ secrets.SERVER_HOST }}" >> ~/.ssh/known_hosts
+          ssh-keyscan -H ${{ secrets.SERVER_HOST }} >> ~/.ssh/known_hosts
 
-      # 6. Deploy dist contents to aaPanel
       - name: Deploy to aaPanel
         run: |
           rsync -avz --delete \
@@ -51,4 +45,4 @@ jobs:
             --exclude='.htaccess' \
             --exclude='.well-known' \
             dist/ \
-            "${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}:${{ secrets.SERVER_PATH }}/"
+            ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}:${{ secrets.SERVER_PATH }}/
