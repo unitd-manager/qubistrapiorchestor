@@ -533,45 +533,7 @@ export default defineConfig(({ mode }) => {
   },
   build: {
     sourcemap: true,
-    rollupOptions: {
-      output: {
-        manualChunks(id) {
-          const normalizedId = id.replace(/\\/g, "/");
-
-          if (
-            normalizedId.includes("/src/lib/strapi-api.ts") ||
-            normalizedId.includes("/src/lib/urls.ts") ||
-            normalizedId.includes("/src/hooks/useSEO.ts") ||
-            normalizedId.includes("/src/hooks/use404Tracking.ts") ||
-            normalizedId.includes("/src/hooks/useRedirects.ts")
-          ) {
-            return "app-runtime";
-          }
-
-          if (!id.includes("node_modules")) {
-            return undefined;
-          }
-
-          if (id.includes("react-dom") || id.includes("react-router") || id.includes("/react/")) {
-            return "react-core";
-          }
-
-          if (id.includes("@tanstack/react-query") || id.includes("axios")) {
-            return "data";
-          }
-
-          if (id.includes("@radix-ui") || id.includes("sonner") || id.includes("vaul") || id.includes("cmdk")) {
-            return "ui";
-          }
-
-          if (id.includes("lucide-react")) {
-            return "icons";
-          }
-
-          return "vendor";
-        },
-      },
-    },
+  
   },
   };
 });
