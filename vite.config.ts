@@ -244,6 +244,16 @@ const applySeoToHtml = (html: string, seo: HtmlSeoData) => {
   return out;
 };
 
+// Strapi's `slug` field is always flat and hyphenated (e.g. "solutions-use-cases",
+// "resources-blog", "pricing") and NEVER has a leading slash. Route paths in the
+// app, however, are slash-based ("/solutions/use-cases", "/pricing"). Every SEO
+// lookup must go through this normalizer or it will silently never match.
+const toStrapiSlug = (routePath: string): string => {
+  const clean = routePath.trim().replace(/^\/+|\/+$/g, "");
+  if (!clean) return "home";
+  return clean.replace(/\//g, "-");
+};
+
 function dynamicSeoHtmlPlugin(mode: string): Plugin {
   const env = loadEnv(mode, process.cwd(), "");
   const strapiBase = (env.VITE_STRAPI_URL || "http://localhost:1337").replace(/\/$/, "");
@@ -262,7 +272,8 @@ function dynamicSeoHtmlPlugin(mode: string): Plugin {
   const fetchSeo = async (slug: string) => {
     if (cache.has(slug)) return cache.get(slug)!;
 
-    const slugsToTry = slug === "/" ? ["/", "/home", "home"] : slug === "/home" ? ["/home", "/", "home"] : [slug];
+    const normalized = toStrapiSlug(slug);
+    const slugsToTry = Array.from(new Set(normalized === "home" ? ["home", "/"] : [normalized]));
     const urls = slugsToTry.flatMap((entry) => [
       `${strapiBase}/api/pages?filters[slug][$eq]=${encodeURIComponent(entry)}`,
       `${strapiBase}/api/pages?filters[slug][$eq]=${encodeURIComponent(entry)}&populate[seo]=*`,
@@ -288,7 +299,9 @@ function dynamicSeoHtmlPlugin(mode: string): Plugin {
     }
 
     const empty = {};
-    cache.set(slug, empty);
+    // Don't cache negative results — a transient failure (permissions not yet
+    // enabled, Strapi briefly down, etc.) would otherwise poison this slug for
+    // the entire lifetime of the dev server process.
     return empty;
   };
 
@@ -326,7 +339,8 @@ function prerenderSeoHtmlPlugin(mode: string): Plugin {
   ];
 
   const fetchSeo = async (slug: string) => {
-    const slugsToTry = slug === "/" ? ["/", "/home", "home"] : slug === "/home" ? ["/home", "/", "home"] : [slug];
+    const normalized = toStrapiSlug(slug);
+    const slugsToTry = Array.from(new Set(normalized === "home" ? ["home", "/"] : [normalized]));
     const urls = slugsToTry.flatMap((entry) => [
       `${strapiBase}/api/pages?filters[slug][$eq]=${encodeURIComponent(entry)}`,
       `${strapiBase}/api/pages?filters[slug][$eq]=${encodeURIComponent(entry)}&populate[seo]=*`,
