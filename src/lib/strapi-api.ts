@@ -14,16 +14,14 @@ import {
 import { toAbsoluteUrl } from '@/lib/urls';
 
 /**
- * IMPORTANT
+ * ============================================================
+ * STRAPI CONFIGURATION
+ * ============================================================
  *
- * Local Strapi is running on port 1339.
- *
- * Production uses VITE_STRAPI_URL from .env.
- *
- * Example local:
+ * Local Strapi:
  * VITE_STRAPI_URL=http://localhost:1339
  *
- * Example production:
+ * Production:
  * VITE_STRAPI_URL=https://qubistrapiadmin.unitdtechnologies.com
  */
 const STRAPI_ORIGIN =
@@ -33,9 +31,17 @@ const STRAPI_ORIGIN =
 const API_BASE_URL =
   `${STRAPI_ORIGIN.replace(/\/+$/, '')}/api`;
 
+/**
+ * ============================================================
+ * STRAPI API SERVICE
+ * ============================================================
+ */
 class StrapiAPIService {
   private api: AxiosInstance;
 
+  /**
+   * Check whether a value is a plain object.
+   */
   private isObject(
     value: unknown
   ): value is Record<string, unknown> {
@@ -44,6 +50,12 @@ class StrapiAPIService {
       value !== null
     );
   }
+
+  /**
+   * ============================================================
+   * REDIRECT HELPERS
+   * ============================================================
+   */
 
   private normalizeRedirectRaw(
     value: string
@@ -99,7 +111,34 @@ class StrapiAPIService {
   }
 
   /**
-   * Extract SEO object from common Strapi formats.
+   * ============================================================
+   * SEO OBJECT HELPERS
+   * ============================================================
+   *
+   * Supports:
+   *
+   * Strapi v4:
+   * {
+   *   seo: {
+   *     attributes: {...}
+   *   }
+   * }
+   *
+   * Strapi nested:
+   * {
+   *   seo: {
+   *     data: {
+   *       attributes: {...}
+   *     }
+   *   }
+   * }
+   *
+   * Strapi v5:
+   * {
+   *   seo: {
+   *     metaTitle: "..."
+   *   }
+   * }
    */
   private getSeoObject(
     value: unknown
@@ -185,11 +224,7 @@ class StrapiAPIService {
     }
 
     /**
-     * Strapi v5:
-     *
-     * seo: {
-     *   metaTitle: "..."
-     * }
+     * Strapi v5 direct object.
      */
     return value;
   }
@@ -218,6 +253,12 @@ class StrapiAPIService {
 
     return undefined;
   }
+
+  /**
+   * ============================================================
+   * STRAPI PAGE HELPERS
+   * ============================================================
+   */
 
   /**
    * Extract page attributes from Strapi response.
@@ -272,6 +313,14 @@ class StrapiAPIService {
 
   /**
    * Extract collection items from Strapi response.
+   *
+   * Supports:
+   *
+   * {
+   *   data: [...]
+   * }
+   *
+   * and nested/custom formats.
    */
   private getPageItems(
     responseBody: unknown
@@ -287,11 +336,7 @@ class StrapiAPIService {
     ).data;
 
     /**
-     * Normal Strapi collection response:
-     *
-     * {
-     *   data: [...]
-     * }
+     * Normal Strapi collection response.
      */
     if (Array.isArray(directData)) {
       return directData;
@@ -335,6 +380,11 @@ class StrapiAPIService {
     return [];
   }
 
+  /**
+   * ============================================================
+   * CONSTRUCTOR
+   * ============================================================
+   */
   constructor() {
     this.api = axios.create({
       baseURL: API_BASE_URL,
@@ -366,6 +416,12 @@ class StrapiAPIService {
   }
 
   /**
+   * ============================================================
+   * MEDIA URL
+   * ============================================================
+   */
+
+  /**
    * Get full media URL from Strapi.
    */
   private getMediaUrl(
@@ -375,6 +431,9 @@ class StrapiAPIService {
       return undefined;
     }
 
+    /**
+     * Media is already a string.
+     */
     if (typeof media === 'string') {
       if (media.startsWith('http')) {
         return media;
@@ -465,7 +524,7 @@ class StrapiAPIService {
     }
 
     /**
-     * Strapi nested media:
+     * Nested Strapi media:
      *
      * {
      *   data: {
@@ -541,32 +600,30 @@ class StrapiAPIService {
   }
 
   /**
-   * Resolve browser URL to:
+   * ============================================================
+   * SEO ENDPOINT RESOLUTION
+   * ============================================================
    *
-   * - pages
-   * - resource-pages
+   * IMPORTANT HOMEPAGE FIX:
    *
-   * IMPORTANT:
+   * /
+   *    ↓
+   * pages
+   *    ↓
+   * slug = home
    *
-   * /resources/demo
-   * -> resource-pages
-   * -> demo
+   * Your Strapi Home entry has:
    *
-   * /resources/faq
-   * -> resource-pages
-   * -> faq
+   * Title:
+   * Home
    *
-   * /customers
-   * -> pages
-   * -> customers
+   * Slug:
+   * home
    *
-   * /pricing
-   * -> pages
-   * -> pricing
+   * SEO metaTitle:
+   * AI Agent Orchestration Platform | qubi
    *
-   * /solutions/use-cases
-   * -> pages
-   * -> solutions-use-cases
+   * Therefore the homepage MUST NOT return null.
    */
   private resolveSeoEndpoint(
     path: string
@@ -610,30 +667,41 @@ class StrapiAPIService {
       );
 
     /**
-     * Home is handled by bootstrap.
+     * ========================================================
+     * HOMEPAGE
+     * ========================================================
+     *
+     * /
+     * /home
+     *
+     * Both point to:
+     *
+     * /api/pages?filters[slug][$eq]=home
      */
     if (
       !clean ||
       clean.toLowerCase() ===
         'home'
     ) {
-      return null;
+      console.log(
+        '[SEO] Homepage detected -> pages/home'
+      );
+
+      return {
+        collection: 'pages',
+        slug: 'home',
+      };
     }
 
     /**
-     * ======================================================
+     * ========================================================
      * RESOURCE PAGES
-     * ======================================================
+     * ========================================================
      *
      * /resources/demo
      * /resources/faq
      *
-     * -> /api/resource-pages
-     *
-     * IMPORTANT:
-     *
-     * We exclude /resources/blog because that may
-     * belong to another content type.
+     * -> resource-pages
      */
     if (
       clean.startsWith(
@@ -660,25 +728,28 @@ class StrapiAPIService {
     }
 
     /**
-     * ======================================================
+     * ========================================================
      * NORMAL PAGES
-     * ======================================================
+     * ========================================================
      *
-     * Strapi stores nested routes as flat slugs.
+     * /customers
+     * -> customers
      *
-     * Example:
+     * /pricing
+     * -> pricing
      *
      * /solutions/use-cases
-     *
-     * becomes:
-     *
-     * solutions-use-cases
+     * -> solutions-use-cases
      */
     const slug =
       clean.replace(
         /\//g,
         '-'
       );
+
+    if (!slug) {
+      return null;
+    }
 
     return {
       collection: 'pages',
@@ -687,19 +758,18 @@ class StrapiAPIService {
   }
 
   /**
+   * ============================================================
+   * FETCH PAGE ENTRY
+   * ============================================================
+   *
    * Fetch the actual page from Strapi.
    *
-   * IMPORTANT:
+   * Example Home:
    *
-   * We use the standard Strapi collection endpoint.
+   * GET /api/pages
    *
-   * We do NOT use the old /slug/:slug fallback here.
-   *
-   * This prevents:
-   *
-   * - CORS fallback errors
-   * - Invalid populate errors
-   * - Home SEO leaking into another page
+   * ?filters[slug][$eq]=home
+   * &populate[seo]=true
    */
   private async fetchPageEntry(
     path: string
@@ -710,6 +780,11 @@ class StrapiAPIService {
       );
 
     if (!target) {
+      console.warn(
+        '[SEO] No SEO endpoint resolved for:',
+        path
+      );
+
       return null;
     }
 
@@ -721,31 +796,18 @@ class StrapiAPIService {
       );
 
       /**
-       * ======================================================
-       * STANDARD STRAPI COLLECTION ENDPOINT
-       * ======================================================
+       * Standard Strapi collection endpoint.
        *
-       * Normal page:
+       * We intentionally use:
        *
-       * GET /api/pages
-       * ?filters[slug][$eq]=customers
-       * &populate[seo]=true
+       * populate[seo]=true
        *
-       * Resource page:
+       * instead of:
        *
-       * GET /api/resource-pages
-       * ?filters[slug][$eq]=demo
-       * &populate[seo]=true
+       * populate[seo]=*
        *
-       * IMPORTANT:
-       *
-       * Use populate[seo]=true.
-       *
-       * Do NOT use populate[seo]=*
-       *
-       * The latter was causing:
-       *
-       * Invalid key metaImage at seo.metaImage
+       * because your SEO component does not require
+       * every nested field.
        */
       const response =
         await this.api.get(
@@ -766,6 +828,11 @@ class StrapiAPIService {
           response.data
         );
 
+      /**
+       * ========================================================
+       * PAGE FOUND
+       * ========================================================
+       */
       if (
         items.length > 0
       ) {
@@ -779,6 +846,11 @@ class StrapiAPIService {
         return items[0];
       }
 
+      /**
+       * ========================================================
+       * PAGE NOT FOUND
+       * ========================================================
+       */
       console.warn(
         `[SEO] No entry found in ${target.collection} for slug: ${target.slug}`
       );
@@ -795,7 +867,9 @@ class StrapiAPIService {
   }
 
   /**
-   * Fetch SEO metadata for a specific route.
+   * ============================================================
+   * FETCH SEO METADATA
+   * ============================================================
    *
    * Strapi seo.metaTitle has highest priority.
    */
@@ -808,17 +882,33 @@ class StrapiAPIService {
       );
 
     if (!entry) {
+      console.warn(
+        '[SEO] No entry available for:',
+        path
+      );
+
       return null;
     }
 
-    return this.normalizeSEOData(
-      entry,
-      path
+    const metadata =
+      this.normalizeSEOData(
+        entry,
+        path
+      );
+
+    console.log(
+      '[SEO] Normalized metadata:',
+      path,
+      metadata
     );
+
+    return metadata;
   }
 
   /**
-   * Fetch JSON-LD schema.
+   * ============================================================
+   * FETCH JSON-LD
+   * ============================================================
    */
   async fetchJSONLDSchema(
     path: string
@@ -885,7 +975,9 @@ class StrapiAPIService {
   }
 
   /**
-   * Fetch redirect rules.
+   * ============================================================
+   * FETCH REDIRECTS
+   * ============================================================
    */
   async fetchRedirects(): Promise<
     RedirectRule[]
@@ -1039,7 +1131,9 @@ class StrapiAPIService {
   }
 
   /**
-   * Log 404 errors.
+   * ============================================================
+   * LOG 404
+   * ============================================================
    */
   async log404Error(
     url: string
@@ -1063,7 +1157,9 @@ class StrapiAPIService {
   }
 
   /**
-   * Normalize SEO data from Strapi.
+   * ============================================================
+   * NORMALIZE SEO DATA
+   * ============================================================
    *
    * TITLE PRIORITY:
    *
@@ -1072,7 +1168,7 @@ class StrapiAPIService {
    * 3. seo.title
    * 4. seo.metaTitleText
    * 5. page.title
-   * 6. default
+   * 6. fallback
    *
    * The URL slug is NEVER used as the title.
    */
@@ -1101,12 +1197,9 @@ class StrapiAPIService {
       >;
 
     /**
-     * ======================================================
+     * ========================================================
      * META TITLE
-     * ======================================================
-     *
-     * This is the value that must appear
-     * in the browser tab.
+     * ========================================================
      */
     const title =
       this.pickString(
@@ -1125,7 +1218,9 @@ class StrapiAPIService {
       'Qubi Flow Orchestrator';
 
     /**
+     * ========================================================
      * META DESCRIPTION
+     * ========================================================
      */
     const description =
       this.pickString(
@@ -1139,7 +1234,9 @@ class StrapiAPIService {
       'Enterprise workflow orchestration platform';
 
     /**
+     * ========================================================
      * KEYWORDS
+     * ========================================================
      */
     const keywords =
       this.pickString(
@@ -1153,7 +1250,9 @@ class StrapiAPIService {
       );
 
     /**
+     * ========================================================
      * CANONICAL
+     * ========================================================
      */
     const canonical =
       toAbsoluteUrl(
@@ -1169,7 +1268,9 @@ class StrapiAPIService {
       );
 
     /**
+     * ========================================================
      * OPEN GRAPH TITLE
+     * ========================================================
      */
     const ogTitle =
       this.pickString(
@@ -1182,7 +1283,9 @@ class StrapiAPIService {
       title;
 
     /**
+     * ========================================================
      * OPEN GRAPH DESCRIPTION
+     * ========================================================
      */
     const ogDescription =
       this.pickString(
@@ -1195,7 +1298,9 @@ class StrapiAPIService {
       description;
 
     /**
+     * ========================================================
      * TWITTER CARD
+     * ========================================================
      */
     const twitterCard =
       this.pickString(
@@ -1208,7 +1313,9 @@ class StrapiAPIService {
       'summary_large_image';
 
     /**
+     * ========================================================
      * TWITTER TITLE
+     * ========================================================
      */
     const twitterTitle =
       this.pickString(
@@ -1221,7 +1328,9 @@ class StrapiAPIService {
       ogTitle;
 
     /**
+     * ========================================================
      * TWITTER DESCRIPTION
+     * ========================================================
      */
     const twitterDescription =
       this.pickString(
@@ -1234,21 +1343,15 @@ class StrapiAPIService {
       ogDescription;
 
     /**
+     * ========================================================
      * OPEN GRAPH IMAGE
+     * ========================================================
      */
     const ogImageRaw =
-      (
-        seo?.ogImage as unknown
-      ) ??
-      (
-        seo?.og_image as unknown
-      ) ??
-      (
-        seo?.metaImage as unknown
-      ) ??
-      (
-        seo?.meta_image as unknown
-      );
+      seo?.ogImage ??
+      seo?.og_image ??
+      seo?.metaImage ??
+      seo?.meta_image;
 
     const ogImage =
       this.getMediaUrl(
@@ -1256,15 +1359,13 @@ class StrapiAPIService {
       );
 
     /**
+     * ========================================================
      * TWITTER IMAGE
+     * ========================================================
      */
     const twitterImageRaw =
-      (
-        seo?.twitterImage as unknown
-      ) ??
-      (
-        seo?.twitter_image as unknown
-      ) ??
+      seo?.twitterImage ??
+      seo?.twitter_image ??
       ogImageRaw;
 
     const twitterImage =
@@ -1273,7 +1374,9 @@ class StrapiAPIService {
       );
 
     /**
+     * ========================================================
      * FINAL SEO DATA
+     * ========================================================
      */
     return {
       id:
@@ -1313,7 +1416,9 @@ class StrapiAPIService {
   }
 
   /**
-   * Default SEO metadata.
+   * ============================================================
+   * DEFAULT SEO
+   * ============================================================
    */
   private getDefaultSEOMetadata(
     path: string
@@ -1342,7 +1447,9 @@ class StrapiAPIService {
   }
 
   /**
-   * Check if URL matches redirect rules.
+   * ============================================================
+   * REDIRECT RESOLUTION
+   * ============================================================
    */
   async resolveRedirect(
     currentPath: string,
@@ -1383,7 +1490,9 @@ class StrapiAPIService {
 }
 
 /**
- * Export singleton instance.
+ * ============================================================
+ * EXPORT SINGLETON
+ * ============================================================
  */
 export const strapiAPI =
   new StrapiAPIService();

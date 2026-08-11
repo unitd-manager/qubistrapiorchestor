@@ -3,22 +3,24 @@
  *
  * SEO behaviour:
  *
- * HOME:
- *   / 
- *   -> uses Home bootstrap SEO
+ * EVERY PAGE INCLUDING HOME
+ * -------------------------
  *
- * OTHER PAGES:
- *   /customers
- *   /pricing
- *   /solutions/...
- *   /resources/...
+ * /                  -> pages -> home
+ * /customers         -> pages -> customers
+ * /pricing           -> pages -> pricing
+ * /solutions/...     -> pages -> flat slug
+ * /resources/demo    -> resource-pages -> demo
+ * /resources/faq     -> resource-pages -> faq
  *
- *   -> fetches that specific page from Strapi
- *   -> reads that page's SEO component
- *   -> uses that page's metaTitle
+ * The SEO metadata always comes from the corresponding
+ * Strapi page.
  *
  * IMPORTANT:
- * Home page SEO is NEVER used as the SEO for another route.
+ * We do NOT use Home bootstrap SEO anymore.
+ *
+ * This prevents Home metadata from becoming stale when
+ * navigating between React Router routes.
  */
 
 import {
@@ -26,10 +28,6 @@ import {
   useMemo,
   useState,
 } from 'react';
-
-import {
-  getRouteBootstrapData,
-} from '@/lib/bootstrap';
 
 import {
   SEOMetadata,
@@ -48,14 +46,15 @@ interface UseSEOOptions {
 }
 
 /**
- * Normalize a browser route.
+ * Normalize browser route.
  *
  * Examples:
  *
- * "/customers/"       -> "/customers"
- * "customers"         -> "/customers"
- * "/pricing?x=1"      -> "/pricing"
- * "/"                 -> "/"
+ * "/"                    -> "/"
+ * "/customers/"          -> "/customers"
+ * "customers"            -> "/customers"
+ * "/pricing?x=1"         -> "/pricing"
+ * "/resources/demo#abc"  -> "/resources/demo"
  */
 const normalizePath = (
   path: string
@@ -66,19 +65,27 @@ const normalizePath = (
 
   let value = path.trim();
 
-  // Remove domain if a complete URL was supplied.
+  /**
+   * Remove domain if a complete URL was supplied.
+   */
   value = value.replace(
     /^https?:\/\/[^/]+/i,
     ''
   );
 
-  // Remove query parameters.
+  /**
+   * Remove query parameters.
+   */
   value = value.split('?')[0];
 
-  // Remove hash.
+  /**
+   * Remove hash.
+   */
   value = value.split('#')[0];
 
-  // Remove duplicate leading/trailing slashes.
+  /**
+   * Remove duplicate leading/trailing slashes.
+   */
   value = value.replace(
     /^\/+|\/+$/g,
     ''
@@ -105,127 +112,62 @@ export const useSEO = (
   } = options;
 
   /**
-   * Current browser route.
+   * Current normalized browser route.
    */
-  const normalizedPath =
-    normalizePath(path);
+  const normalizedPath = useMemo(
+    () => normalizePath(path),
+    [path]
+  );
 
   /**
-   * VERY IMPORTANT:
+   * Fallback metadata.
    *
-   * Only "/" is the Home page.
+   * This is ONLY temporary while Strapi is being fetched.
    */
-  const isHomePage =
-    normalizedPath === '/';
+  const fallbackMetadata = useMemo(
+    (): SEOMetadata => ({
+      id: normalizedPath,
 
-  /**
-   * ---------------------------------------------------------
-   * HOME BOOTSTRAP DATA
-   * ---------------------------------------------------------
-   *
-   * We only read bootstrap SEO for Home.
-   *
-   * This prevents Home's SEO from being reused by:
-   *
-   * /customers
-   * /pricing
-   * /solutions
-   * /resources
-   */
-  const bootstrappedRoute =
-    isHomePage
-      ? getRouteBootstrapData(
-          normalizedPath
-        )
-      : null;
+      title: fallbackTitle,
 
-  const bootstrappedMetadata =
-    isHomePage
-      ? (
-          bootstrappedRoute?.seo
-            ?.metadata ?? null
-        )
-      : null;
-
-  const bootstrappedJsonLD =
-    isHomePage && fetchJsonLD
-      ? (
-          bootstrappedRoute?.seo
-            ?.jsonLD ?? null
-        )
-      : null;
-
-  /**
-   * ---------------------------------------------------------
-   * FALLBACK METADATA
-   * ---------------------------------------------------------
-   */
-  const fallbackMetadata =
-    useMemo<SEOMetadata>(
-      () => ({
-        id: normalizedPath,
-
-        title:
-          fallbackTitle,
-
-        description:
-          fallbackDescription,
-
-        robots:
-          'index, follow',
-      }),
-      [
+      description:
         fallbackDescription,
-        fallbackTitle,
-        normalizedPath,
-      ]
-    );
+
+      robots:
+        'index, follow',
+    }),
+    [
+      normalizedPath,
+      fallbackTitle,
+      fallbackDescription,
+    ]
+  );
 
   /**
-   * ---------------------------------------------------------
-   * INITIAL METADATA
-   * ---------------------------------------------------------
+   * IMPORTANT:
    *
-   * HOME:
-   *   Use bootstrap immediately.
+   * Start every route with its fallback.
    *
-   * OTHER PAGES:
-   *   Do NOT use Home bootstrap.
-   *
-   *   Start with the page fallback only until Strapi
-   *   returns the actual page SEO.
+   * We do NOT use Home bootstrap metadata here.
    */
-  const initialMetadata =
-    isHomePage &&
-    bootstrappedMetadata
-      ? bootstrappedMetadata
-      : fallbackMetadata;
-
   const [
     metadata,
     setMetadata,
   ] = useState<SEOMetadata | null>(
-    initialMetadata
+    fallbackMetadata
   );
 
   const [
     jsonLD,
     setJsonLD,
   ] = useState<JSONLDSchema | null>(
-    isHomePage
-      ? bootstrappedJsonLD
-      : null
+    null
   );
 
   const [
     loading,
     setLoading,
-  ] = useState<boolean>(
-    !(
-      isHomePage &&
-      bootstrappedMetadata
-    )
-  );
+  ] = useState(true);
 
   const [
     error,
@@ -234,69 +176,63 @@ export const useSEO = (
     null
   );
 
+  /**
+   * ======================================================
+   * IMPORTANT ROUTE CHANGE EFFECT
+   * ======================================================
+   *
+   * Whenever React Router changes the URL:
+   *
+   * pricing -> home
+   * home -> pricing
+   * customers -> home
+   *
+   * immediately reset the SEO state for the new route.
+   *
+   * This prevents the previous page's metadata from
+   * remaining in memory.
+   */
+  useEffect(() => {
+    setMetadata(fallbackMetadata);
+
+    setJsonLD(null);
+
+    setLoading(true);
+
+    setError(null);
+  }, [
+    normalizedPath,
+    fallbackMetadata,
+  ]);
+
+  /**
+   * ======================================================
+   * FETCH SEO FROM STRAPI
+   * ======================================================
+   */
   useEffect(() => {
     let cancelled = false;
 
     const fetchSEOData =
       async () => {
-        /**
-         * ---------------------------------------------------
-         * HOME PAGE
-         * ---------------------------------------------------
-         *
-         * Home can use bootstrap SEO.
-         */
-        if (
-          isHomePage &&
-          bootstrappedMetadata
-        ) {
-          if (cancelled) {
-            return;
-          }
-
-          setMetadata(
-            bootstrappedMetadata
-          );
-
-          setJsonLD(
-            bootstrappedJsonLD
-          );
-
-          setLoading(false);
-
-          setError(null);
-
-          return;
-        }
-
-        /**
-         * ---------------------------------------------------
-         * EVERY NON-HOME PAGE
-         * ---------------------------------------------------
-         *
-         * This is the important part.
-         *
-         * We ALWAYS ask Strapi for THIS route.
-         *
-         * Examples:
-         *
-         * /customers
-         * /pricing
-         * /solutions/healthcare
-         * /resources/faqs
-         */
-        setLoading(true);
-
-        setError(null);
-
         try {
           console.log(
             '[SEO] Fetching Strapi SEO for:',
             normalizedPath
           );
 
+          setLoading(true);
+
+          setError(null);
+
           /**
-           * Fetch THIS PAGE's SEO.
+           * Fetch the current route.
+           *
+           * IMPORTANT:
+           *
+           * Home is ALSO fetched.
+           *
+           * / -> pages -> home
            */
           const seoData =
             await strapiAPI.fetchSEOMetadata(
@@ -314,14 +250,9 @@ export const useSEO = (
           );
 
           /**
-           * -------------------------------------------------
-           * STRAPI PAGE FOUND
-           * -------------------------------------------------
-           *
-           * seoData.title should be:
-           *
-           * Strapi:
-           * SEO -> Meta Title
+           * =================================================
+           * STRAPI SEO FOUND
+           * =================================================
            */
           if (
             seoData &&
@@ -329,35 +260,53 @@ export const useSEO = (
               'string' &&
             seoData.title.trim()
           ) {
+            console.log(
+              '[SEO] Applying title:',
+              seoData.title
+            );
+
             setMetadata(
               seoData
             );
+
+            /**
+             * VERY IMPORTANT
+             *
+             * Explicitly update browser tab.
+             *
+             * This guarantees that React Router navigation
+             * updates the browser title without requiring
+             * a page refresh.
+             */
+            document.title =
+              seoData.title;
           } else {
             /**
-             * No SEO metadata found.
-             *
-             * Keep the current page's fallback.
-             *
-             * NEVER use Home metadata here.
+             * =================================================
+             * NO SEO FOUND
+             * =================================================
              */
-            setMetadata(
-              (current) => {
-                if (
-                  current?.title &&
-                  current.title.trim()
-                ) {
-                  return current;
-                }
-
-                return fallbackMetadata;
-              }
+            console.warn(
+              '[SEO] No SEO metadata found for:',
+              normalizedPath
             );
+
+            setMetadata(
+              fallbackMetadata
+            );
+
+            /**
+             * Use fallback only if Strapi did not return
+             * valid SEO.
+             */
+            document.title =
+              fallbackMetadata.title;
           }
 
           /**
-           * -------------------------------------------------
+           * =================================================
            * JSON-LD
-           * -------------------------------------------------
+           * =================================================
            */
           if (fetchJsonLD) {
             const schemaData =
@@ -372,6 +321,8 @@ export const useSEO = (
             setJsonLD(
               schemaData
             );
+          } else {
+            setJsonLD(null);
           }
         } catch (err) {
           if (cancelled) {
@@ -391,23 +342,16 @@ export const useSEO = (
           );
 
           /**
-           * IMPORTANT:
+           * Keep the fallback for this route.
            *
-           * Don't replace the current page title
-           * with Home SEO if the API fails.
+           * NEVER use another page's metadata.
            */
           setMetadata(
-            (current) => {
-              if (
-                current?.title &&
-                current.title.trim()
-              ) {
-                return current;
-              }
-
-              return fallbackMetadata;
-            }
+            fallbackMetadata
           );
+
+          document.title =
+            fallbackMetadata.title;
 
           setJsonLD(null);
         } finally {
@@ -425,12 +369,30 @@ export const useSEO = (
       cancelled = true;
     };
   }, [
-    bootstrappedJsonLD,
-    bootstrappedMetadata,
+    normalizedPath,
     fallbackMetadata,
     fetchJsonLD,
-    isHomePage,
-    normalizedPath,
+  ]);
+
+  /**
+   * ======================================================
+   * SAFETY EFFECT
+   * ======================================================
+   *
+   * If another component changes document.title,
+   * re-apply the current SEO title whenever metadata
+   * changes.
+   */
+  useEffect(() => {
+    if (
+      metadata?.title &&
+      metadata.title.trim()
+    ) {
+      document.title =
+        metadata.title;
+    }
+  }, [
+    metadata,
   ]);
 
   return {
