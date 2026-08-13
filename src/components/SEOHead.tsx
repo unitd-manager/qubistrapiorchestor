@@ -207,10 +207,30 @@ export const SEOHead = ({
        * Existing title is already a real title and incoming
        * title is only a fallback.
        *
-       * DO NOTHING.
-       *
-       * This is the important fix for your problem.
+       * DO NOTHING (keep the existing real title — a fallback
+       * should never clobber real content).
        */
+
+      /**
+       * CASE 5:
+       *
+       * Both the existing title and the incoming title are
+       * "real" (non-fallback), but they don't match each other.
+       *
+       * This happens when a static/prerendered build baked in
+       * an older Strapi title (e.g. via `npm run build` +
+       * `npm run preview`) and the title has since changed in
+       * Strapi. The live, freshly-fetched title should always
+       * win over a stale build-time snapshot.
+       */
+      else if (
+        !incomingIsFallback &&
+        !currentIsFallback &&
+        currentDocumentTitle !== resolvedTitle
+      ) {
+        document.title =
+          resolvedTitle;
+      }
     }
 
     /**
