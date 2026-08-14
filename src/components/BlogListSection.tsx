@@ -29,7 +29,7 @@ function truncateWords(text: string, maxWords: number): string {
  * Manager > Blog — this block only controls how they are presented.
  */
 const BlogListSection = ({ main_title, show_featured = true, max_posts = 50 }: BlogListSectionProps) => {
-  const { data: blogsData } = useQuery({
+  const { data: blogsData, isLoading } = useQuery({
     queryKey: ["blog-posts", max_posts],
     queryFn: () => getBlogs({ limit: max_posts }),
     staleTime: 5 * 60 * 1000,
@@ -51,6 +51,48 @@ const BlogListSection = ({ main_title, show_featured = true, max_posts = 50 }: B
   const regularPosts = featuredPost ? visiblePosts.filter((p) => p.attributes.flag !== true) : visiblePosts;
 
   const listTitle = main_title || "Latest Articles";
+
+  // Reserve layout space while the query is in flight so real content
+  // doesn't cause a layout shift when it pops in (fixes high CLS).
+  if (isLoading) {
+    return (
+      <>
+        {show_featured && (
+          <section className="py-12 bg-background">
+            <div className="container mx-auto px-4 lg:px-8">
+              <div className="rounded-2xl bg-primary/5 border border-primary/20 p-8 lg:p-12 animate-pulse">
+                <div className="h-6 w-40 bg-surface-elevated rounded-full mb-4" />
+                <div className="h-8 w-2/3 bg-surface-elevated rounded mb-4" />
+                <div className="h-4 w-full max-w-2xl bg-surface-elevated rounded mb-2" />
+                <div className="h-4 w-1/2 max-w-2xl bg-surface-elevated rounded mb-6" />
+                <div className="h-9 w-32 bg-surface-elevated rounded" />
+              </div>
+            </div>
+          </section>
+        )}
+        <section className="py-10 pb-20 lg:pb-24 bg-background">
+          <div className="container mx-auto px-4 lg:px-8">
+            <div className="h-9 w-64 bg-surface-elevated rounded mb-8 animate-pulse" />
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {Array.from({ length: max_posts >= 6 ? 6 : max_posts || 3 }).map((_, i) => (
+                <div
+                  key={i}
+                  className="p-6 rounded-2xl bg-surface-elevated border border-border flex flex-col animate-pulse"
+                >
+                  <div className="h-4 w-24 bg-background rounded mb-4" />
+                  <div className="h-5 w-full bg-background rounded mb-2" />
+                  <div className="h-5 w-3/4 bg-background rounded mb-3" />
+                  <div className="h-4 w-full bg-background rounded mb-2" />
+                  <div className="h-4 w-5/6 bg-background rounded" />
+                  <div className="h-4 w-1/3 bg-background rounded mt-6 pt-4 border-t border-border" />
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      </>
+    );
+  }
 
   return (
     <>

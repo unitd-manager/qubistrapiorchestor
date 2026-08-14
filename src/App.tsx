@@ -2,6 +2,8 @@ import { lazy, Suspense, useEffect, useState } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Route, Routes, useLocation } from "react-router-dom";
 import { RedirectHandler } from "@/components/RedirectHandler";
+import Navbar from "@/components/Navbar";
+import Footer from "@/components/Footer";
 import Index from "./pages/Index.tsx";
 import ResourcePage from "./pages/ResourcePage.tsx";
 import FAQsPage from "@/pages/FAQsPage";
@@ -28,7 +30,20 @@ const SonnerToaster = lazy(() => import("@/components/ui/sonner").then((module) 
 
 const queryClient = new QueryClient();
 
-const RouteFallback = () => <div className="min-h-screen bg-background" aria-hidden="true" />;
+const RouteFallback = () => (
+  <div className="min-h-screen bg-background" aria-hidden="true">
+    {/*
+      Keep the Navbar/Footer chrome visually stable across the lazy-loaded
+      page-chunk swap. Previously this was a bare blank div, so when the
+      real page (which also renders Navbar/Footer) popped in, the header
+      and footer appeared from nothing — a full-viewport layout shift on
+      every route change. Rendering them here too means nothing moves
+      when the real content replaces this fallback.
+    */}
+    <Navbar />
+    <div style={{ height: 76 }} aria-hidden="true" />
+  </div>
+);
 
 const App = () => {
   const [showDeferredUi, setShowDeferredUi] = useState(false);

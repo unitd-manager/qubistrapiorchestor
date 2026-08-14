@@ -35,7 +35,7 @@ const BlogPage = () => {
 
   // Page-builder blocks (modern path). The URL is /resources/blog but the CMS
   // slug is flat ("resources-blog") because slug is a uid field (no slashes).
-  const { data: blocks } = useQuery({
+  const { data: blocks, isLoading: blocksLoading } = useQuery({
     queryKey: ["page-blocks", "resources-blog"],
     queryFn: () => getPageBlocks("resources-blog"),
     staleTime: 5 * 60 * 1000,
@@ -57,7 +57,7 @@ const BlogPage = () => {
     enabled: !hasBlocks,
   });
 
-  const { data: blogsData } = useQuery({
+  const { data: blogsData, isLoading: blogsLoading } = useQuery({
     queryKey: ["blog-posts"],
     queryFn: () => getBlogs({ limit: 50 }),
     staleTime: 5 * 60 * 1000,
@@ -91,10 +91,11 @@ const BlogPage = () => {
     "Monthly perspectives on enterprise AI execution, case studies, and operational best practices.";
   const ctaBtn = cta?.attributes.display_type ?? "Subscribe";
 
-  if (seoLoading) {
+  if (seoLoading || blocksLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div>Loading...</div>
+      <div className="min-h-screen">
+        <Navbar />
+        <div style={{ height: 76 }} aria-hidden="true" />
       </div>
     );
   }
@@ -136,7 +137,20 @@ const BlogPage = () => {
       </section>
 
       {/* Featured Post */}
-      {featuredPost && (
+      {blogsLoading ? (
+        <section className="py-12 bg-background">
+          <div className="container mx-auto px-4 lg:px-8">
+            <div className="rounded-2xl bg-primary/5 border border-primary/20 p-8 lg:p-12 animate-pulse">
+              <div className="h-6 w-40 bg-surface-elevated rounded-full mb-4" />
+              <div className="h-8 w-2/3 bg-surface-elevated rounded mb-4" />
+              <div className="h-4 w-full max-w-2xl bg-surface-elevated rounded mb-2" />
+              <div className="h-4 w-1/2 max-w-2xl bg-surface-elevated rounded mb-6" />
+              <div className="h-9 w-32 bg-surface-elevated rounded" />
+            </div>
+          </div>
+        </section>
+      ) : (
+        featuredPost && (
         <section className="py-12 bg-background">
           <div className="container mx-auto px-4 lg:px-8">
             <Link
@@ -176,6 +190,7 @@ const BlogPage = () => {
             </Link>
           </div>
         </section>
+        )
       )}
 
       {/* All Posts */}
@@ -184,6 +199,23 @@ const BlogPage = () => {
           <h2 className="text-3xl sm:text-4xl font-bold tracking-tight text-foreground mb-8">
             {selectedCategory ? `Latest Articles — ${selectedCategory}` : "Latest Articles"}
           </h2>
+          {blogsLoading ? (
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {Array.from({ length: 6 }).map((_, i) => (
+                <div
+                  key={i}
+                  className="p-6 rounded-2xl bg-surface-elevated border border-border flex flex-col animate-pulse"
+                >
+                  <div className="h-4 w-24 bg-background rounded mb-4" />
+                  <div className="h-5 w-full bg-background rounded mb-2" />
+                  <div className="h-5 w-3/4 bg-background rounded mb-3" />
+                  <div className="h-4 w-full bg-background rounded mb-2" />
+                  <div className="h-4 w-5/6 bg-background rounded" />
+                  <div className="h-4 w-1/3 bg-background rounded mt-6 pt-4 border-t border-border" />
+                </div>
+              ))}
+            </div>
+          ) : (
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
             {regularPosts.map((post) => (
               <Link
@@ -217,6 +249,7 @@ const BlogPage = () => {
               </Link>
             ))}
           </div>
+          )}
         </div>
       </section>
 

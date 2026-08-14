@@ -2,6 +2,20 @@
 @tailwind components;
 @tailwind utilities;
 
+/*
+ * Always reserve space for the vertical scrollbar, even on pages/states
+ * that are shorter than the viewport (e.g. loading skeletons). Without
+ * this, a page that starts shorter than the viewport (no scrollbar) and
+ * then grows taller once real content loads (scrollbar appears) shifts
+ * every element sideways by the scrollbar's width — a full-page,
+ * constant-width layout shift on every load. This is the #1 suspect for
+ * a Cumulative Layout Shift score that stays identical across unrelated
+ * content changes.
+ */
+html {
+  scrollbar-gutter: stable;
+}
+
 @layer base {
   :root {
     --background: 0 0% 100%;
