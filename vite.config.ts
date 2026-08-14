@@ -513,7 +513,7 @@ function prerenderSeoHtmlPlugin(mode: string): Plugin {
 
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), "");
-  const strapiProxyTarget = (env.VITE_STRAPI_URL || "https://qubiadmin.unitdtechnologies.com").replace(/\/$/, "");
+  const strapiProxyTarget = (env.VITE_STRAPI_URL || "https://qubistrapiadmin.unitdtechnologies.com").replace(/\/$/, "");
 
   return {
   server: {
