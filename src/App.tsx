@@ -8,6 +8,13 @@ import Index from "./pages/Index.tsx";
 import ResourcePage from "./pages/ResourcePage.tsx";
 import FAQsPage from "@/pages/FAQsPage";
 
+declare global {
+  interface Window {
+    __REACT_QUERY_DATA__?: Record<string, unknown>;
+    __QUERY_CLIENT__?: QueryClient;
+  }
+}
+
 const ScrollToTop = () => {
   const { pathname } = useLocation();
   useEffect(() => {
@@ -28,7 +35,26 @@ const NewsroomPage = lazy(() => import("./pages/NewsroomPage.tsx"));
 const Toaster = lazy(() => import("@/components/ui/toaster").then((module) => ({ default: module.Toaster })));
 const SonnerToaster = lazy(() => import("@/components/ui/sonner").then((module) => ({ default: module.Toaster })));
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: { queries: { staleTime: 5 * 60 * 1000 } },
+});
+
+// Only set during the prerender build (npm run build:prerender). Lets
+// prerender.mjs read the cache after data has loaded, so it can dump it
+// into the HTML for the seeding block below to pick up on real visits.
+if (typeof window !== "undefined" && import.meta.env.MODE === "prerender") {
+  window.__QUERY_CLIENT__ = queryClient;
+}
+
+// Seed the cache from prerendered data (injected by prerender.mjs into <head>)
+// so hydration reuses it instead of showing a skeleton and refetching.
+// Runs once at module load, before any component mounts.
+if (typeof window !== "undefined" && window.__REACT_QUERY_DATA__) {
+  for (const [key, value] of Object.entries(window.__REACT_QUERY_DATA__)) {
+    queryClient.setQueryData(JSON.parse(key), value);
+  }
+  delete window.__REACT_QUERY_DATA__;
+}
 
 const RouteFallback = () => (
   <div className="min-h-screen bg-background" aria-hidden="true">
