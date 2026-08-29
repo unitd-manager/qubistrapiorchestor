@@ -1,9 +1,11 @@
 import { Button } from "@/components/ui/button";
 import { ArrowRight, CheckCircle } from "lucide-react";
 import { stripHtml } from "@/lib/strapi";
+import { filterPublished } from "@/lib/publish";
 
 interface PlanFeature {
   text?: string;
+  Publish?: boolean;
 }
 
 interface PlanItem {
@@ -13,6 +15,7 @@ interface PlanItem {
   cta_label?: string;
   highlight?: boolean;
   features?: PlanFeature[];
+  Publish?: boolean;
 }
 
 interface PlansSectionProps {
@@ -25,7 +28,7 @@ interface PlansSectionProps {
 
 /** Section heading plus a row of pricing/plan cards with feature lists. */
 const PlansSection = ({ eyebrow, main_title, description, cta_url, plans }: PlansSectionProps) => {
-  const items = plans ?? [];
+  const items = filterPublished(plans);
 
   return (
     <section className="py-12 lg:py-16 bg-background">
@@ -39,9 +42,9 @@ const PlansSection = ({ eyebrow, main_title, description, cta_url, plans }: Plan
         </div>
 
         <div className="grid lg:grid-cols-3 gap-8 items-start">
-          {items.map((plan) => (
+          {items.map((plan, planIndex) => (
             <div
-              key={plan.title}
+              key={plan.title || planIndex}
               className={`rounded-2xl border p-8 flex flex-col h-full transition-all duration-300 ${
                 plan.highlight
                   ? "bg-primary/5 border-primary/40 shadow-[0_4px_30px_hsl(24_100%_50%/0.15)] relative"
@@ -65,7 +68,7 @@ const PlansSection = ({ eyebrow, main_title, description, cta_url, plans }: Plan
                 )}
               </div>
               <div className="space-y-3 mb-8 flex-1">
-                {(plan.features ?? []).map((f, i) => (
+                {filterPublished(plan.features).map((f, i) => (
                   <div key={i} className="flex items-start gap-2 text-sm text-foreground">
                     <CheckCircle size={14} className="text-primary flex-shrink-0 mt-0.5" />
                     {f.text}

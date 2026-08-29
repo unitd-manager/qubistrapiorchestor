@@ -10,6 +10,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { stripHtml } from "@/lib/strapi";
+import { filterPublished } from "@/lib/publish";
 
 const ICON_MAP: Record<string, LucideIcon> = {
   Building2,
@@ -22,6 +23,7 @@ const ICON_MAP: Record<string, LucideIcon> = {
 
 interface HighlightItem {
   text?: string;
+  Publish?: boolean;
 }
 
 interface IndustryCard {
@@ -29,6 +31,7 @@ interface IndustryCard {
   description?: string;
   icon?: string;
   highlights?: HighlightItem[];
+  Publish?: boolean;
 }
 
 interface SolutionsIndustryLayoutProps {
@@ -45,7 +48,7 @@ const SolutionsIndustryLayout = ({
   industry_cards,
   class_name,
 }: SolutionsIndustryLayoutProps) => {
-  const cards = industry_cards ?? [];
+  const cards = filterPublished(industry_cards);
 
   return (
     <section className={`py-12 lg:py-16 bg-background ${class_name ?? ""}`}>
@@ -65,6 +68,7 @@ const SolutionsIndustryLayout = ({
           <div className="grid md:grid-cols-3 gap-8 mt-12">
             {cards.map((card, i) => {
               const Icon = ICON_MAP[card.icon ?? ""] ?? Layers;
+              const highlights = filterPublished(card.highlights);
               return (
                 <div
                   key={`${card.title ?? "industry"}-${i}`}
@@ -83,9 +87,9 @@ const SolutionsIndustryLayout = ({
                       {stripHtml(card.description)}
                     </p>
                   )}
-                  {card.highlights && card.highlights.length > 0 && (
+                  {highlights.length > 0 && (
                     <div className="mt-6 space-y-2">
-                      {card.highlights.map((h, hi) => (
+                      {highlights.map((h, hi) => (
                         <div key={hi} className="flex items-start gap-2 text-sm text-foreground">
                           <CheckCircle2 size={16} className="text-primary flex-shrink-0 mt-0.5" />
                           <span>{h.text}</span>

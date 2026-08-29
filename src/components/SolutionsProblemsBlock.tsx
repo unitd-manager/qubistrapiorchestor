@@ -1,8 +1,10 @@
 import { stripHtml } from "@/lib/strapi";
+import { filterPublished } from "@/lib/publish";
 
 interface ProblemItem {
   title?: string;
   description?: string;
+  Publish?: boolean;
 }
 
 interface SolutionsProblemsBlockProps {
@@ -19,7 +21,7 @@ const SolutionsProblemsBlock = ({
   description,
   problems,
 }: SolutionsProblemsBlockProps) => {
-  const items = problems ?? [];
+  const items = filterPublished(problems);
 
   return (
     <section className="py-12 lg:py-16 bg-background border-b border-border">

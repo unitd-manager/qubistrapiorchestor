@@ -1,6 +1,7 @@
 import { Headphones, Calculator, Monitor, FileText, UserCog, GitBranch, type LucideIcon } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { getHomeSectionWithItems, stripHtml } from "@/lib/strapi";
+import { filterPublished, filterPublishedLive } from "@/lib/publish";
 
 const ICON_MAP: Record<string, LucideIcon> = {
   Headphones, Calculator, Monitor, FileText, UserCog, GitBranch,
@@ -9,7 +10,7 @@ const ICON_MAP: Record<string, LucideIcon> = {
 interface UseCasesBlockProps {
   eyebrow?: string;
   main_title?: string;
-  use_case_items?: { icon?: string; title?: string; description?: string }[];
+  use_case_items?: { icon?: string; title?: string; description?: string; Publish?: boolean }[];
 }
 
 const UseCasesSection = (props: UseCasesBlockProps = {}) => {
@@ -25,12 +26,12 @@ const UseCasesSection = (props: UseCasesBlockProps = {}) => {
   const heading = props.main_title ?? data?.section?.attributes?.section_title ?? "Automation that fits your business";
 
   const useCases = hasBlock
-    ? (props.use_case_items ?? []).map((item) => ({
+    ? filterPublished(props.use_case_items).map((item) => ({
         icon: ICON_MAP[item.icon ?? ""] ?? FileText,
         title: item.title ?? "",
         description: stripHtml(item.description),
       }))
-    : (data?.items ?? []).map((item) => ({
+    : filterPublishedLive(data?.items).map((item) => ({
         icon: ICON_MAP[item.attributes.description_short ?? ""] ?? FileText,
         title: item.attributes.category_title,
         description: stripHtml(item.attributes.description),
@@ -47,9 +48,9 @@ const UseCasesSection = (props: UseCasesBlockProps = {}) => {
         </div>
 
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {useCases.map((item) => (
+          {useCases.map((item, i) => (
             <div
-              key={item.title}
+              key={item.title || i}
               className="group p-8 rounded-2xl border border-border bg-card hover:border-primary/30 hover:shadow-card-hover transition-all duration-300 cursor-pointer"
             >
               <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center text-primary mb-5 group-hover:bg-primary group-hover:text-primary-foreground transition-all duration-300">

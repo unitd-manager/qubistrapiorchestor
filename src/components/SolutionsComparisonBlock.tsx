@@ -1,5 +1,8 @@
+import { filterPublished } from "@/lib/publish";
+
 interface ComparisonItem {
   text?: string;
+  Publish?: boolean;
 }
 
 interface SolutionsComparisonBlockProps {
@@ -20,8 +23,8 @@ const SolutionsComparisonBlock = ({
   qubiLabel,
   qubiItems,
 }: SolutionsComparisonBlockProps) => {
-  const others = othersItems ?? [];
-  const qubi = qubiItems ?? [];
+  const others = filterPublished(othersItems);
+  const qubi = filterPublished(qubiItems);
 
   return (
     <section className="py-12 lg:py-16 bg-surface-elevated border-y border-border">

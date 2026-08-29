@@ -1,7 +1,10 @@
+import { filterPublished } from "@/lib/publish";
+
 interface ComparisonRow {
   aspect?: string;
   them?: string;
   us?: string;
+  Publish?: boolean;
 }
 
 interface ComparisonSectionProps {
@@ -14,7 +17,7 @@ interface ComparisonSectionProps {
 
 /** Comparison table: aspect vs. competitor column vs. qubi column. */
 const ComparisonSection = ({ eyebrow, main_title, them_label, us_label, rows }: ComparisonSectionProps) => {
-  const items = rows ?? [];
+  const items = filterPublished(rows);
 
   return (
     <section className="py-12 lg:py-16 bg-surface-elevated border-y border-border">
@@ -35,8 +38,8 @@ const ComparisonSection = ({ eyebrow, main_title, them_label, us_label, rows }: 
               </tr>
             </thead>
             <tbody>
-              {items.map((row) => (
-                <tr key={row.aspect} className="border-b border-border/50 hover:bg-background/50 transition-colors">
+              {items.map((row, i) => (
+                <tr key={row.aspect || i} className="border-b border-border/50 hover:bg-background/50 transition-colors">
                   <td className="py-4 pr-8 font-medium text-foreground">{row.aspect}</td>
                   <td className="py-4 px-4 text-center text-muted-foreground">{row.them}</td>
                   <td className="py-4 px-4 text-center text-primary font-medium">{row.us}</td>

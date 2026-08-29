@@ -1,6 +1,13 @@
 import { Button } from "@/components/ui/button";
 import { ArrowRight } from "lucide-react";
 import { stripHtml } from "@/lib/strapi";
+import { filterPublished } from "@/lib/publish";
+
+interface StatItem {
+  value?: string;
+  label?: string;
+  Publish?: boolean;
+}
 
 interface SolutionsFinalCTAProps {
   heading?: string;
@@ -9,6 +16,7 @@ interface SolutionsFinalCTAProps {
   description?: string;
   buttonLabel?: string;
   buttonUrl?: string;
+  stats?: StatItem[];
 }
 
 /** Closing CTA band, used on the Solutions family of pages. */
@@ -19,7 +27,10 @@ const SolutionsFinalCTA = ({
   description,
   buttonLabel,
   buttonUrl,
+  stats,
 }: SolutionsFinalCTAProps) => {
+  const items = filterPublished(stats);
+
   return (
     <section className="py-12 lg:py-16 bg-background relative overflow-hidden">
       <div className="absolute inset-0 bg-gradient-glow pointer-events-none opacity-50" />
@@ -31,6 +42,16 @@ const SolutionsFinalCTA = ({
           <p className="mt-6 text-lg text-muted-foreground max-w-xl mx-auto">
             {stripHtml(description)}
           </p>
+        )}
+        {items.length > 0 && (
+          <div className="mt-10 grid sm:grid-cols-4 gap-6 max-w-2xl mx-auto">
+            {items.map((item, i) => (
+              <div key={item.label || i} className="text-center">
+                <div className="text-3xl font-bold text-gradient">{item.value}</div>
+                <div className="mt-1 text-sm text-muted-foreground">{item.label}</div>
+              </div>
+            ))}
+          </div>
         )}
         {buttonLabel && buttonUrl && (
           <div className="flex flex-wrap justify-center gap-4 mt-10">

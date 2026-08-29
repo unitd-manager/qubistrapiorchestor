@@ -1,17 +1,20 @@
 import { useState } from "react";
 import { ChevronDown } from "lucide-react";
 import { blocksToText } from "@/lib/strapi";
+import { filterPublished } from "@/lib/publish";
 
 interface FaqItem {
   id?: number;
   question?: string;
   answer?: any;
+  Publish?: boolean;
 }
 
 interface FaqGroup {
   id?: number;
   group_title?: string;
   faq?: FaqItem[];
+  Publish?: boolean;
 }
 
 interface FaqListSectionProps {
@@ -42,28 +45,36 @@ const AccordionItem = ({ question, answer }: { question?: string; answer?: any }
   );
 };
 
-const FaqListSection = ({ section_title, groups }: FaqListSectionProps) => (
-  <section className="py-12 lg:py-16 bg-background">
-    <div className="container mx-auto px-4 lg:px-8">
-      <div className="max-w-3xl mx-auto space-y-12">
-        {section_title && (
-          <h2 className="text-3xl font-bold text-foreground text-center">{section_title}</h2>
-        )}
-        {groups?.map((group, gi) => (
-          <div key={group.id ?? gi}>
-            <h2 className="text-2xl font-bold text-foreground mb-6 pb-4 border-b border-border">
-              {group.group_title}
-            </h2>
-            <div className="bg-surface-elevated rounded-2xl border border-border px-6 divide-y divide-border">
-              {(group.faq ?? []).map((item, fi) => (
-                <AccordionItem key={item.id ?? fi} question={item.question} answer={item.answer} />
-              ))}
-            </div>
-          </div>
-        ))}
+const FaqListSection = ({ section_title, groups }: FaqListSectionProps) => {
+  const publishedGroups = filterPublished(groups);
+
+  return (
+    <section className="py-12 lg:py-16 bg-background">
+      <div className="container mx-auto px-4 lg:px-8">
+        <div className="max-w-3xl mx-auto space-y-12">
+          {section_title && (
+            <h2 className="text-3xl font-bold text-foreground text-center">{section_title}</h2>
+          )}
+          {publishedGroups.map((group, gi) => {
+            const faqs = filterPublished(group.faq);
+            if (faqs.length === 0) return null;
+            return (
+              <div key={group.id ?? gi}>
+                <h2 className="text-2xl font-bold text-foreground mb-6 pb-4 border-b border-border">
+                  {group.group_title}
+                </h2>
+                <div className="bg-surface-elevated rounded-2xl border border-border px-6 divide-y divide-border">
+                  {faqs.map((item, fi) => (
+                    <AccordionItem key={item.id ?? fi} question={item.question} answer={item.answer} />
+                  ))}
+                </div>
+              </div>
+            );
+          })}
+        </div>
       </div>
-    </div>
-  </section>
-);
+    </section>
+  );
+};
 
 export default FaqListSection;

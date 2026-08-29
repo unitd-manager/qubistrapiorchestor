@@ -1,9 +1,11 @@
 import { CheckCircle } from "lucide-react";
 import { stripHtml } from "@/lib/strapi";
+import { filterPublished } from "@/lib/publish";
 
 interface DifferentiatorItem {
   title?: string;
   description?: string;
+  Publish?: boolean;
 }
 
 interface DifferentiatorsSectionProps {
@@ -14,7 +16,7 @@ interface DifferentiatorsSectionProps {
 
 /** Four-column grid of check-marked cards ("Why enterprise clients choose us"). */
 const DifferentiatorsSection = ({ eyebrow, main_title, items }: DifferentiatorsSectionProps) => {
-  const cards = items ?? [];
+  const cards = filterPublished(items);
 
   return (
     <section className="py-12 lg:py-16 bg-surface-elevated border-y border-border">
@@ -28,8 +30,8 @@ const DifferentiatorsSection = ({ eyebrow, main_title, items }: DifferentiatorsS
           </h2>
         </div>
         <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-8">
-          {cards.map((d) => (
-            <div key={d.title} className="p-6 rounded-2xl bg-background border border-border">
+          {cards.map((d, i) => (
+            <div key={d.title || i} className="p-6 rounded-2xl bg-background border border-border">
               <CheckCircle size={20} className="text-primary mb-4" />
               <h3 className="text-base font-semibold text-foreground mb-2">{d.title}</h3>
               <p className="text-sm text-muted-foreground leading-relaxed">{stripHtml(d.description)}</p>

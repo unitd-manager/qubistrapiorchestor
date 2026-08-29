@@ -1,6 +1,9 @@
+import { filterPublished } from "@/lib/publish";
+
 interface StatItem {
   value?: string;
   label?: string;
+  Publish?: boolean;
 }
 
 interface SolutionsStatsBandProps {
@@ -9,7 +12,7 @@ interface SolutionsStatsBandProps {
 
 /** Horizontal band of big stat numbers with labels, used on Solutions pages. */
 const SolutionsStatsBand = ({ stats }: SolutionsStatsBandProps) => {
-  const items = (stats ?? []).filter((s) => s.value || s.label);
+  const items = filterPublished(stats).filter((s) => s.value || s.label);
   if (items.length === 0) return null;
 
   return (

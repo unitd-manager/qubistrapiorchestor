@@ -1,14 +1,17 @@
 import { stripHtml } from "@/lib/strapi";
+import { filterPublished } from "@/lib/publish";
 
 interface VerbItem {
   verb?: string;
   detail?: string;
+  Publish?: boolean;
 }
 
 interface CardItem {
   icon?: string;
   title?: string;
   description?: string;
+  Publish?: boolean;
 }
 
 interface SolutionsWhatWeDoProps {
@@ -31,8 +34,8 @@ const SolutionsWhatWeDo = ({
   verbs,
   cards,
 }: SolutionsWhatWeDoProps) => {
-  const verbItems = verbs ?? [];
-  const cardItems = cards ?? [];
+  const verbItems = filterPublished(verbs);
+  const cardItems = filterPublished(cards);
   if (verbItems.length === 0 && cardItems.length === 0) return null;
 
   return (

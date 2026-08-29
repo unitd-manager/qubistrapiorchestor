@@ -6,8 +6,8 @@ import { getHomeSection, stripHtml } from "@/lib/strapi";
 interface FinalCTABlockProps {
   main_title?: string;
   description?: string;
-  button?: { label?: string; url?: string } | null;
-  secondary_button?: { label?: string; url?: string } | null;
+  button?: { label?: string; url?: string; Publish?: boolean } | null;
+  secondary_button?: { label?: string; url?: string; Publish?: boolean } | null;
 }
 
 const FinalCTASection = (props: FinalCTABlockProps = {}) => {
@@ -22,6 +22,10 @@ const FinalCTASection = (props: FinalCTABlockProps = {}) => {
   const a = section?.attributes;
   const heading = props.main_title ?? a?.section_title ?? "";
   const subheading = stripHtml(props.description) || stripHtml(a?.description);
+
+  const isPrimaryPublished = props.button?.Publish !== false;
+  const isSecondaryPublished = props.secondary_button?.Publish !== false;
+
   const primaryLabel = props.button?.label ?? a?.display_type ?? "";
   const secondaryLabel = props.secondary_button?.label ?? a?.template ?? "";
   const ctaUrl = props.button?.url ?? a?.external_link ?? "";
@@ -46,14 +50,14 @@ const FinalCTASection = (props: FinalCTABlockProps = {}) => {
         </h2>
         <p className="mt-6 text-lg text-muted-foreground max-w-xl mx-auto">{subheading}</p>
         <div className="flex flex-wrap justify-center gap-4 mt-10">
-          {primaryLabel && (
+          {isPrimaryPublished && primaryLabel && (
             <Button asChild variant="hero" size="lg" className="gap-2 px-8 h-12">
               <a href={ctaUrl} target="_blank" rel="noopener noreferrer">
                 {primaryLabel} <ArrowRight size={18} />
               </a>
             </Button>
           )}
-          {secondaryLabel && (
+          {isSecondaryPublished && secondaryLabel && (
             <Button asChild variant="hero-outline" size="lg" className="gap-2 px-8 h-12">
               <a href={secondaryUrl} target="_blank" rel="noopener noreferrer">
                 <MessageSquare size={16} /> {secondaryLabel}

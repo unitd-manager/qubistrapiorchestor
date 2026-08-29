@@ -1,11 +1,13 @@
 import { TrendingDown } from "lucide-react";
 import { stripHtml } from "@/lib/strapi";
+import { filterPublished } from "@/lib/publish";
 
 interface CaseMetric {
   label?: string;
   metric_type?: "before_after" | "reduction" | "value";
   primary_value?: string;
   secondary_value?: string;
+  Publish?: boolean;
 }
 
 interface CaseStudy {
@@ -16,6 +18,7 @@ interface CaseStudy {
   quote?: string;
   quote_role?: string;
   metrics?: CaseMetric[];
+  Publish?: boolean;
 }
 
 interface CaseStudiesSectionProps {
@@ -26,7 +29,7 @@ interface CaseStudiesSectionProps {
 
 /** Section heading plus large case-study cards with challenge, solution, quote, and result metrics. */
 const CaseStudiesSection = ({ eyebrow, main_title, case_studies }: CaseStudiesSectionProps) => {
-  const studies = case_studies ?? [];
+  const studies = filterPublished(case_studies);
 
   return (
     <section className="py-12 lg:py-16 bg-background">
@@ -41,8 +44,8 @@ const CaseStudiesSection = ({ eyebrow, main_title, case_studies }: CaseStudiesSe
         </div>
 
         <div className="space-y-12">
-          {studies.map((cs) => (
-            <div key={cs.title} className="rounded-2xl bg-surface-elevated border border-border overflow-hidden">
+          {studies.map((cs, csIndex) => (
+            <div key={cs.title || csIndex} className="rounded-2xl bg-surface-elevated border border-border overflow-hidden">
               <div className="grid lg:grid-cols-5 gap-0">
                 {/* Left panel */}
                 <div className="lg:col-span-2 p-8 bg-primary/5 border-b lg:border-b-0 lg:border-r border-border flex flex-col justify-between">
@@ -76,8 +79,8 @@ const CaseStudiesSection = ({ eyebrow, main_title, case_studies }: CaseStudiesSe
                 <div className="lg:col-span-3 p-8 flex flex-col justify-center">
                   <p className="text-sm font-semibold text-primary uppercase tracking-widest mb-6">Results</p>
                   <div className="grid sm:grid-cols-3 gap-6">
-                    {(cs.metrics ?? []).map((metric) => (
-                      <div key={metric.label} className="p-6 rounded-xl bg-background border border-border text-center">
+                    {filterPublished(cs.metrics).map((metric, mIndex) => (
+                      <div key={metric.label || mIndex} className="p-6 rounded-xl bg-background border border-border text-center">
                         <div className="flex items-center justify-center gap-1 mb-2">
                           <TrendingDown size={16} className="text-green-500" />
                         </div>

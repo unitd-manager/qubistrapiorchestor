@@ -9,7 +9,7 @@ const ICON_MAP: Record<string, LucideIcon> = {
 interface ProblemBlockProps {
   main_title?: string;
   description?: string;
-  problem_items?: { icon?: string; title?: string }[];
+  problem_items?: { icon?: string; title?: string; Publish?: boolean }[];
 }
 
 const ProblemSection = (props: ProblemBlockProps = {}) => {
@@ -25,11 +25,15 @@ const ProblemSection = (props: ProblemBlockProps = {}) => {
   const subheading = stripHtml(props.description) || stripHtml(data?.section?.attributes?.description) || "Most enterprises struggle with siloed tools, manual processes, and limited scalability — making true end-to-end automation impossible.";
 
   const problems = hasBlock
-    ? (props.problem_items ?? []).map((item) => ({
+  ? (props.problem_items ?? [])
+      .filter((item) => item.Publish !== false)
+      .map((item) => ({
         icon: ICON_MAP[item.icon ?? ""] ?? Unlink,
         label: item.title ?? "",
       }))
-    : (data?.items ?? []).map((item) => ({
+  : (data?.items ?? [])
+      .filter((item) => item.attributes?.published !== false)
+      .map((item) => ({
         icon: ICON_MAP[item.attributes.description_short ?? ""] ?? Unlink,
         label: item.attributes.category_title,
       }));

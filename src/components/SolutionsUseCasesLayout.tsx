@@ -9,6 +9,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { stripHtml } from "@/lib/strapi";
+import { filterPublished } from "@/lib/publish";
 
 const ICON_MAP: Record<string, LucideIcon> = {
   DollarSign,
@@ -21,6 +22,7 @@ const ICON_MAP: Record<string, LucideIcon> = {
 
 interface UseCaseStat {
   text?: string;
+  Publish?: boolean;
 }
 
 interface UseCaseItem {
@@ -29,6 +31,7 @@ interface UseCaseItem {
   title?: string;
   description?: string;
   stats?: UseCaseStat[];
+  Publish?: boolean;
 }
 
 interface SolutionsUseCasesLayoutProps {
@@ -47,7 +50,7 @@ const SolutionsUseCasesLayout = ({
   description,
   useCases,
 }: SolutionsUseCasesLayoutProps) => {
-  const items = useCases ?? [];
+  const items = filterPublished(useCases);
 
   return (
     <section className="py-12 lg:py-16 bg-background">
@@ -70,6 +73,7 @@ const SolutionsUseCasesLayout = ({
           <div className="grid md:grid-cols-2 gap-8">
             {items.map((uc, i) => {
               const Icon = ICON_MAP[uc.icon ?? ""] ?? FileText;
+              const stats = filterPublished(uc.stats);
               return (
                 <div
                   key={`${uc.title ?? "use-case"}-${i}`}
@@ -95,9 +99,9 @@ const SolutionsUseCasesLayout = ({
                       {stripHtml(uc.description)}
                     </p>
                   )}
-                  {uc.stats && uc.stats.length > 0 && (
+                  {stats.length > 0 && (
                     <div className="space-y-2">
-                      {uc.stats.map((s, si) => (
+                      {stats.map((s, si) => (
                         <div key={si} className="flex items-center gap-2 text-sm text-foreground">
                           <CheckCircle size={14} className="text-primary flex-shrink-0" />
                           {s.text}

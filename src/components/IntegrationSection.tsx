@@ -1,6 +1,7 @@
 import { Building2, Database, Globe, Brain, Wrench, type LucideIcon } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { getHomeSectionWithItems, stripHtml } from "@/lib/strapi";
+import { filterPublished, filterPublishedLive } from "@/lib/publish";
 
 const ICON_MAP: Record<string, LucideIcon> = {
   Building2, Database, Globe, Brain, Wrench,
@@ -10,7 +11,7 @@ interface IntegrationBlockProps {
   eyebrow?: string;
   main_title?: string;
   description?: string;
-  integration_items?: { icon?: string; label?: string; count?: string }[];
+  integration_items?: { icon?: string; label?: string; count?: string; Publish?: boolean }[];
 }
 
 const IntegrationSection = (props: IntegrationBlockProps = {}) => {
@@ -27,12 +28,12 @@ const IntegrationSection = (props: IntegrationBlockProps = {}) => {
   const subheading = stripHtml(props.description) || stripHtml(data?.section?.attributes?.description) || "Connect to the systems you already use — from enterprise ERPs to modern AI APIs — with pre-built connectors and extensible integration layers.";
 
   const integrations = hasBlock
-    ? (props.integration_items ?? []).map((item) => ({
+    ? filterPublished(props.integration_items).map((item) => ({
         icon: ICON_MAP[item.icon ?? ""] ?? Globe,
         label: item.label ?? "",
         count: item.count ?? "",
       }))
-    : (data?.items ?? []).map((item) => ({
+    : filterPublishedLive(data?.items).map((item) => ({
         // icon in description_short, count in description
         icon: ICON_MAP[item.attributes.description_short ?? ""] ?? Globe,
         label: item.attributes.category_title,
@@ -53,9 +54,9 @@ const IntegrationSection = (props: IntegrationBlockProps = {}) => {
         </div>
 
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-6">
-          {integrations.map((item) => (
+          {integrations.map((item, i) => (
             <div
-              key={item.label}
+              key={item.label || i}
               className="group flex flex-col items-center gap-4 p-8 rounded-2xl border border-border hover:border-primary/40 bg-background transition-all duration-300 hover:shadow-card-hover"
             >
               <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-primary-foreground transition-all duration-300">

@@ -306,7 +306,6 @@ export function mediaUrl(url: string | null | undefined): string {
 export async function getBlogs(options?: { featured?: boolean; limit?: number }) {
   const qs =
     "?populate[images]=true&populate[blog_category]=true" +
-    "&filters[published][$eq]=true" +
     (options?.featured !== undefined ? `&filters[flag][$eq]=${options.featured}` : "") +
     "&sort[0]=date:desc" +
     (options?.limit ? `&pagination[pageSize]=${options.limit}` : "&pagination[pageSize]=50");
@@ -433,10 +432,11 @@ export async function getHomeSection(sectionType: string) {
 }
 
 // ─── Page builder (dynamic zone) ─────────────────────────────────────────────
-
 export interface PageBlock {
   id?: number;
   __component: string;
+  publish?: boolean;
+  Publish?: boolean;
   [key: string]: unknown;
 }
 

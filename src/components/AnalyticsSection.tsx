@@ -1,6 +1,7 @@
 import { BarChart3, Activity, Gauge, Monitor, Headphones, Lock, type LucideIcon } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { getHomeSectionWithItems, stripHtml } from "@/lib/strapi";
+import { filterPublished, filterPublishedLive } from "@/lib/publish";
 
 const ICON_MAP: Record<string, LucideIcon> = {
   BarChart3, Activity, Gauge, Monitor, Headphones, Lock,
@@ -9,7 +10,7 @@ const ICON_MAP: Record<string, LucideIcon> = {
 interface AnalyticsBlockProps {
   eyebrow?: string;
   main_title?: string;
-  features?: { icon?: string; title?: string; description?: string }[];
+  features?: { icon?: string; title?: string; description?: string; Publish?: boolean }[];
 }
 
 const AnalyticsSection = (props: AnalyticsBlockProps = {}) => {
@@ -25,12 +26,12 @@ const AnalyticsSection = (props: AnalyticsBlockProps = {}) => {
   const heading = props.main_title ?? data?.section?.attributes?.section_title ?? "Visibility, performance, and accountability built in";
 
   const features = hasBlock
-    ? (props.features ?? []).map((item) => ({
+    ? filterPublished(props.features).map((item) => ({
         icon: ICON_MAP[item.icon ?? ""] ?? BarChart3,
         title: item.title ?? "",
         description: stripHtml(item.description),
       }))
-    : (data?.items ?? []).map((item) => ({
+    : filterPublishedLive(data?.items).map((item) => ({
         icon: ICON_MAP[item.attributes.description_short ?? ""] ?? BarChart3,
         title: item.attributes.category_title,
         description: stripHtml(item.attributes.description),
@@ -54,9 +55,9 @@ const AnalyticsSection = (props: AnalyticsBlockProps = {}) => {
         </div>
 
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {features.map((item) => (
+          {features.map((item, i) => (
             <div
-              key={item.title}
+              key={item.title || i}
               className="group p-6 rounded-2xl border border-border bg-background hover:border-primary/30 hover:shadow-card-hover transition-all duration-300"
             >
               <div className="flex items-center gap-4 mb-3">

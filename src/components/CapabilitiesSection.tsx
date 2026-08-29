@@ -9,7 +9,7 @@ const ICON_MAP: Record<string, LucideIcon> = {
 interface CapabilitiesBlockProps {
   eyebrow?: string;
   main_title?: string;
-  capability_items?: { icon?: string; title?: string; description?: string }[];
+  capability_items?: { icon?: string; title?: string; description?: string; Publish?: boolean }[];
 }
 
 const CapabilitiesSection = (props: CapabilitiesBlockProps = {}) => {
@@ -25,16 +25,20 @@ const CapabilitiesSection = (props: CapabilitiesBlockProps = {}) => {
   const heading = props.main_title ?? data?.section?.attributes?.section_title ?? "One platform. Modular capabilities. Enterprise control.";
 
   const capabilities = hasBlock
-    ? (props.capability_items ?? []).map((item) => ({
-        icon: ICON_MAP[item.icon ?? ""] ?? Plug,
-        title: item.title ?? "",
-        description: stripHtml(item.description),
-      }))
-    : (data?.items ?? []).map((item) => ({
-        icon: ICON_MAP[item.attributes.description_short ?? ""] ?? Plug,
-        title: item.attributes.category_title,
-        description: stripHtml(item.attributes.description),
-      }));
+    ? (props.capability_items ?? [])
+        .filter((item) => item.Publish !== false)
+        .map((item) => ({
+          icon: ICON_MAP[item.icon ?? ""] ?? Plug,
+          title: item.title ?? "",
+          description: stripHtml(item.description),
+        }))
+    : (data?.items ?? [])
+        .filter((item) => item.attributes?.published !== false)
+        .map((item) => ({
+          icon: ICON_MAP[item.attributes.description_short ?? ""] ?? Plug,
+          title: item.attributes.category_title,
+          description: stripHtml(item.attributes.description),
+        }));
 
   return (
     <section className="py-12 lg:py-16 bg-orange-50" id="capabilities">

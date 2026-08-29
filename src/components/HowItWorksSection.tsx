@@ -1,6 +1,7 @@
 import { Search, PenTool, Rocket, LineChart, type LucideIcon } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { getHomeSectionWithItems, stripHtml } from "@/lib/strapi";
+import { filterPublished, filterPublishedLive } from "../lib/publish";
 
 const ICON_MAP: Record<string, LucideIcon> = {
   Search, PenTool, Rocket, LineChart,
@@ -9,7 +10,7 @@ const ICON_MAP: Record<string, LucideIcon> = {
 interface HowItWorksBlockProps {
   eyebrow?: string;
   main_title?: string;
-  steps?: { icon?: string; step_number?: string; title?: string; description?: string }[];
+  steps?: { icon?: string; step_number?: string; title?: string; description?: string; Publish?: boolean }[];
 }
 
 const HowItWorksSection = (props: HowItWorksBlockProps = {}) => {
@@ -25,13 +26,13 @@ const HowItWorksSection = (props: HowItWorksBlockProps = {}) => {
   const heading = props.main_title ?? data?.section?.attributes?.section_title ?? "From discovery to scale in four steps";
 
   const steps = hasBlock
-    ? (props.steps ?? []).map((item) => ({
+    ? filterPublished(props.steps).map((item) => ({
         icon: ICON_MAP[item.icon ?? ""] ?? Search,
         step: item.step_number ?? "",
         title: item.title ?? "",
         description: stripHtml(item.description),
       }))
-    : (data?.items ?? []).map((item) => ({
+    : filterPublishedLive(data?.items).map((item) => ({
         // icon stored in external_link, step number in description_short
         icon: ICON_MAP[item.attributes.external_link ?? ""] ?? Search,
         step: item.attributes.description_short ?? "",
@@ -51,8 +52,7 @@ const HowItWorksSection = (props: HowItWorksBlockProps = {}) => {
 
         <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-8">
           {steps.map((item, i) => (
-            <div key={item.step} className="relative group">
-              {/* Connector line */}
+            <div key={item.step || i} className="relative group">
               {i < steps.length - 1 && (
                 <div className="hidden lg:block absolute top-10 left-[calc(100%)] w-full h-px bg-gradient-to-r from-primary/40 to-transparent z-0" />
               )}

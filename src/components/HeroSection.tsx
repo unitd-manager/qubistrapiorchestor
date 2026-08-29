@@ -44,14 +44,23 @@ const getOptimizedHeroImage = (image?: StrapiMediaAsset | null): BootstrapHeroIm
   };
 };
 
+interface HeroButtonProps {
+  label?: string;
+  url?: string;
+  Publish?: boolean;
+}
+
+interface HeroImageBlock extends StrapiMediaAsset {
+  Publish?: boolean;
+}
+
 interface HeroBlockProps {
   badge_text?: string;
   main_title?: string;
   description?: string;
-  button?: { label?: string; url?: string } | null;
-  hero_image?: StrapiMediaAsset | null;
+  button?: HeroButtonProps | null;
+  hero_image?: HeroImageBlock | null;
 }
-
 const HeroSection = (props: HeroBlockProps = {}) => {
   const hasBlock = Boolean(props.main_title);
   const bootstrappedHero = getRouteBootstrapData("/")?.home?.hero;
@@ -64,27 +73,31 @@ const HeroSection = (props: HeroBlockProps = {}) => {
   });
 
   const a = section?.attributes;
-  const blockHeroImage = getOptimizedHeroImage(props.hero_image);
+
+  const isButtonPublished = props.button?.Publish !== false;
+  const isHeroImagePublished = props.hero_image?.Publish !== false;
+
+  const blockHeroImage = isHeroImagePublished ? getOptimizedHeroImage(props.hero_image) : undefined;
   const liveHeroImage = getOptimizedHeroImage(a?.images?.[0]);
   const heroImage = blockHeroImage ?? bootstrappedHero?.image ?? liveHeroImage;
+
   const badge = props.badge_text ?? bootstrappedHero?.badge ?? a?.template ?? "Agentic Automation Platform";
   const heading = props.main_title ?? bootstrappedHero?.heading ?? a?.section_title ?? "Design and orchestrate enterprise workflows with qubi";
   const liveSubheading =
     stripHtml(a?.description) || "Connect AI agents, business systems, and human approvals in one enterprise orchestration layer.";
   const subheading =
     stripHtml(props.description) || bootstrappedHero?.subheading || liveSubheading;
+
   const ctaLabel = props.button?.label ?? bootstrappedHero?.ctaLabel ?? a?.display_type ?? "Book a Demo";
   const ctaUrl = props.button?.url ?? bootstrappedHero?.ctaUrl ?? a?.external_link ?? "https://meetings.hubspot.com/maheshv";
   const imageSrcSet = getHeroImageSrcSet(heroImage);
 
-  return (
+    return (
     <section className="relative min-h-screen flex items-center pt-20 overflow-hidden bg-background">
-      {/* Subtle orange glow */}
       <div className="absolute inset-0 bg-gradient-glow pointer-events-none" />
 
       <div className="container mx-auto px-4 lg:px-8 py-12 lg:py-16">
         <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
-          {/* Left content */}
           <div className="max-w-2xl">
             <div className="animate-fade-up">
               <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/10 text-primary text-sm font-medium mb-6 border border-primary/20">
@@ -109,31 +122,32 @@ const HeroSection = (props: HeroBlockProps = {}) => {
               {subheading}
             </p>
 
-            <div className="animate-fade-up-delay-3 flex flex-wrap gap-4 mt-10">
-              <Button asChild variant="hero" size="lg" className="gap-2 px-8 h-12">
-                <a href={ctaUrl} target="_blank" rel="noopener noreferrer">
-                  {ctaLabel} <ArrowRight size={18} />
-                </a>
-              </Button>
-            </div>
+            {isButtonPublished && (
+              <div className="animate-fade-up-delay-3 flex flex-wrap gap-4 mt-10">
+                <Button asChild variant="hero" size="lg" className="gap-2 px-8 h-12">
+                  <a href={ctaUrl} target="_blank" rel="noopener noreferrer">
+                    {ctaLabel} <ArrowRight size={18} />
+                  </a>
+                </Button>
+              </div>
+            )}
           </div>
 
-          {/* Right illustration */}
           <div className="animate-fade-up-delay-2 relative">
-            {heroImage?.src && (
+            {isHeroImagePublished && heroImage?.src && (
               <div className="relative rounded-2xl overflow-hidden shadow-card-hover">
                 <img
-  src={heroImage.src}
-  srcSet={imageSrcSet}
-  sizes={heroImage.sizes}
-  alt={heroImage.alt}
-  width={heroImage.width}
-  height={heroImage.height}
-  className="w-full h-auto rounded-2xl"
-  loading="eager"
-  decoding="async"
-  {...{ fetchpriority: "high" }}
-/>
+                  src={heroImage.src}
+                  srcSet={imageSrcSet}
+                  sizes={heroImage.sizes}
+                  alt={heroImage.alt}
+                  width={heroImage.width}
+                  height={heroImage.height}
+                  className="w-full h-auto rounded-2xl"
+                  loading="eager"
+                  decoding="async"
+                  {...{ fetchpriority: "high" }}
+                />
                 <div className="absolute inset-0 rounded-2xl ring-1 ring-inset ring-primary/20" />
               </div>
             )}

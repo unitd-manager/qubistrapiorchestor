@@ -1,9 +1,11 @@
 import { stripHtml } from "@/lib/strapi";
+import { filterPublished } from "@/lib/publish";
 
 interface FlowStep {
   icon?: string;
   title?: string;
   description?: string;
+  Publish?: boolean;
 }
 
 interface SolutionsExecutionFlowProps {
@@ -20,7 +22,7 @@ const SolutionsExecutionFlow = ({
   highlightedHeading,
   steps,
 }: SolutionsExecutionFlowProps) => {
-  const items = steps ?? [];
+  const items = filterPublished(steps);
   if (items.length === 0) return null;
 
   return (

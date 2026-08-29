@@ -3,6 +3,7 @@ import { useMutation } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, CheckCircle } from "lucide-react";
 import { createEnquiry, blocksToText, type EnquiryPayload } from "@/lib/strapi";
+import { filterPublished } from "@/lib/publish";
 
 interface DemoFormField {
   id?: number;
@@ -12,6 +13,7 @@ interface DemoFormField {
   is_required?: boolean;
   field_name?: string;
   width?: "half" | "full";
+  Publish?: boolean;
 }
 
 interface DemoContactCtaSectionProps {
@@ -40,7 +42,7 @@ const DemoContactCtaSection = ({
   request_content,
   request_description,
 }: DemoContactCtaSectionProps) => {
-  const fields = form_fields ?? [];
+  const fields = filterPublished(form_fields);
 
   const [values, setValues] = useState<Record<string, string>>(() =>
     Object.fromEntries(fields.map((f) => [f.field_name || slugify(f.label), ""]))

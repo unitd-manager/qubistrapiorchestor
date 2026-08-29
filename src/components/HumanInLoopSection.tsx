@@ -2,13 +2,14 @@ import { Button } from "@/components/ui/button";
 import { UserCheck, Bot, ArrowRight } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { getHomeSectionWithItems, stripHtml } from "@/lib/strapi";
+import { filterPublished, filterPublishedLive } from "@/lib/publish";
 
 interface HumanInLoopBlockProps {
   eyebrow?: string;
   main_title?: string;
   description?: string;
-  badges?: { title?: string }[];
-  button?: { label?: string; url?: string } | null;
+  badges?: { title?: string; Publish?: boolean }[];
+  button?: { label?: string; url?: string; Publish?: boolean } | null;
 }
 
 const HumanInLoopSection = (props: HumanInLoopBlockProps = {}) => {
@@ -24,11 +25,14 @@ const HumanInLoopSection = (props: HumanInLoopBlockProps = {}) => {
   const eyebrow = props.eyebrow ?? a?.template ?? "";
   const heading = props.main_title ?? a?.section_title ?? "";
   const description = stripHtml(props.description) || stripHtml(a?.description);
+
+  const isButtonPublished = props.button?.Publish !== false;
   const ctaLabel = props.button?.label ?? a?.display_type ?? "";
   const ctaUrl = props.button?.url ?? a?.external_link ?? "";
+
   const badges = hasBlock
-    ? (props.badges ?? []).map((item) => item.title ?? "").filter(Boolean)
-    : (data?.items ?? []).map((item) => item.attributes.category_title);
+    ? filterPublished(props.badges).map((item) => item.title ?? "").filter(Boolean)
+    : filterPublishedLive(data?.items).map((item) => item.attributes.category_title);
 
   return (
     <section className="py-12 lg:py-16 bg-background" id="human-in-loop">
@@ -72,18 +76,20 @@ const HumanInLoopSection = (props: HumanInLoopBlockProps = {}) => {
             </h2>
             <p className="mt-6 text-lg text-muted-foreground leading-relaxed">{description}</p>
             <div className="mt-8 flex flex-wrap gap-4">
-              {badges.map((badge) => (
-                <div key={badge} className="flex items-center gap-3 px-4 py-2 rounded-lg bg-surface-elevated">
+              {badges.map((badge, i) => (
+                <div key={badge || i} className="flex items-center gap-3 px-4 py-2 rounded-lg bg-surface-elevated">
                   <div className="w-2 h-2 rounded-full bg-primary" />
                   <span className="text-sm font-medium text-foreground">{badge}</span>
                 </div>
               ))}
             </div>
-            <Button asChild variant="hero" size="lg" className="mt-8 gap-2">
-              <a href={ctaUrl} target="_blank" rel="noopener noreferrer">
-                {ctaLabel} <ArrowRight size={18} />
-              </a>
-            </Button>
+            {isButtonPublished && ctaUrl && (
+              <Button asChild variant="hero" size="lg" className="mt-8 gap-2">
+                <a href={ctaUrl} target="_blank" rel="noopener noreferrer">
+                  {ctaLabel} <ArrowRight size={18} />
+                </a>
+              </Button>
+            )}
           </div>
         </div>
       </div>

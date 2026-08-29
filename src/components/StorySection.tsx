@@ -1,10 +1,14 @@
+import { filterPublished } from "@/lib/publish";
+
 interface StoryParagraph {
   text?: string;
+  Publish?: boolean;
 }
 
 interface StatItem {
   value?: string;
   label?: string;
+  Publish?: boolean;
 }
 
 interface StorySectionProps {
@@ -17,8 +21,8 @@ interface StorySectionProps {
 /** Eyebrow, heading, story paragraphs, and a row of stat cards. */
 const StorySection = ({ eyebrow, main_title, paragraphs, stats }: StorySectionProps) => {
   const heading = main_title ?? "";
-  const paras = (paragraphs ?? []).map((p) => p.text ?? "").filter(Boolean);
-  const statItems = (stats ?? []).filter((s) => s.value || s.label);
+  const paras = filterPublished(paragraphs).map((p) => p.text ?? "").filter(Boolean);
+  const statItems = filterPublished(stats).filter((s) => s.value || s.label);
 
   return (
     <section className="py-12 lg:py-16 bg-background">
@@ -50,8 +54,8 @@ const StorySection = ({ eyebrow, main_title, paragraphs, stats }: StorySectionPr
           </div>
           {statItems.length > 0 && (
             <div className="mt-12 grid sm:grid-cols-3 gap-6">
-              {statItems.map((item) => (
-                <div key={item.label} className="p-6 rounded-2xl bg-surface-elevated border border-border text-center">
+              {statItems.map((item, i) => (
+                <div key={item.label || i} className="p-6 rounded-2xl bg-surface-elevated border border-border text-center">
                   <div className="text-4xl font-bold text-gradient">{item.value}</div>
                   <div className="mt-2 text-sm text-muted-foreground">{item.label}</div>
                 </div>

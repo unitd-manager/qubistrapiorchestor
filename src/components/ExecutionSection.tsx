@@ -1,10 +1,12 @@
 import { DynamicIcon } from "@/components/DynamicIcon";
 import { stripHtml } from "@/lib/strapi";
+import { filterPublished } from "@/lib/publish";
 
 interface IconCardItem {
   icon?: string;
   title?: string;
   description?: string;
+  Publish?: boolean;
 }
 
 interface ExecutionSectionProps {
@@ -25,7 +27,7 @@ const ExecutionSection = ({
   callout_title,
   callout_description,
 }: ExecutionSectionProps) => {
-  const cards = items ?? [];
+  const cards = filterPublished(items);
 
   return (
     <section className="py-12 lg:py-16 bg-background">
@@ -40,8 +42,8 @@ const ExecutionSection = ({
             )}
           </div>
           <div className="grid md:grid-cols-3 gap-8">
-            {cards.map((item) => (
-              <div key={item.title} className="p-8 rounded-2xl bg-surface-elevated border border-border">
+            {cards.map((item, i) => (
+              <div key={item.title || i} className="p-8 rounded-2xl bg-surface-elevated border border-border">
                 <div className="flex items-center justify-center w-12 h-12 rounded-xl bg-primary/10 text-primary mb-4">
                   <DynamicIcon name={item.icon} size={22} />
                 </div>

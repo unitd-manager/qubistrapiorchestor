@@ -98,17 +98,19 @@ const BLOCK_COMPONENTS: Record<string, ComponentType<any>> = {
 export function PageBuilderRenderer({ blocks }: { blocks: PageBlock[] }) {
   return (
     <>
-      {blocks.map((block, i) => {
-        const Component = BLOCK_COMPONENTS[block.__component];
-        if (!Component) {
-          if (import.meta.env.DEV) {
-            console.warn("[PageBuilderRenderer] No component for:", block.__component);
+      {blocks
+        .filter((block) => (block.publish ?? block.Publish) !== false)
+        .map((block, i) => {
+          const Component = BLOCK_COMPONENTS[block.__component];
+          if (!Component) {
+            if (import.meta.env.DEV) {
+              console.warn("[PageBuilderRenderer] No component for:", block.__component);
+            }
+            return null;
           }
-          return null;
-        }
-        const { id, __component, ...props } = block;
-        return <Component key={`${__component}-${id ?? "x"}-${i}`} {...props} />;
-      })}
+          const { id, __component, publish, Publish, ...props } = block;
+          return <Component key={`${__component}-${id ?? "x"}-${i}`} {...props} />;
+        })}
     </>
   );
 }
