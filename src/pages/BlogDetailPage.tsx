@@ -105,6 +105,7 @@ export default function BlogDetailPage() {
   });
 
   const blog: StrapiItem<BlogAttributes> | null = data?.data ?? null;
+  const isPublished = blog?.attributes.Publish !== false;
   const contentHtml = blog?.attributes.description ? sanitizeBlogHtml(blog.attributes.description) : "";
 
   const bannerUrl =
@@ -113,7 +114,7 @@ export default function BlogDetailPage() {
   const title = blog?.attributes.meta_title || blog?.attributes.title || "Blog";
   const description = blog?.attributes.meta_description || stripHtml(blog?.attributes.description) || "Blog article";
 
-  const seoMetadata: SEOMetadata | null = blog
+  const seoMetadata: SEOMetadata | null = blog && isPublished
     ? {
         id: String(blog.id),
         title,
@@ -145,7 +146,7 @@ export default function BlogDetailPage() {
     staleTime: 5 * 60 * 1000,
   });
 
-  const allRecent = (recentData?.data ?? []).filter((p) => blogCategoryName(p.attributes));
+  const allRecent = (recentData?.data ?? []).filter((p) => blogCategoryName(p.attributes)&& p.attributes.Publish !== false);
   const recentPosts = allRecent
     .filter((p) => (documentId ? p.attributes.documentId !== documentId : true))
     .slice(0, 5);
@@ -190,7 +191,7 @@ export default function BlogDetailPage() {
                 <div className="h-64 w-full bg-surface-elevated rounded-2xl" />
               </div>
             </div>
-          ) : !blog ? (
+          ) : !blog || !isPublished ?  (
             <div className="min-h-[40vh] flex items-center justify-center">
               <div>Blog not found</div>
             </div>

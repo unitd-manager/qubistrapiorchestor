@@ -47,6 +47,7 @@ export interface BlogAttributes {
   title: string;
   description: string | null;
   author: string | null;
+  Publish: boolean;
   date: string | null;
   category_id: number | null;
   flag: boolean | null;
